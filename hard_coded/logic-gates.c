@@ -42,9 +42,9 @@ int main() {
 	float w2 = randFloat() * 5;
 	float b  = randFloat() * 5;
 
-	const float rate = 1;
+	const float rate = 1e-3;
 	const float eps = 1e-3;
-	const size_t gen_count = 1000;
+	const size_t gen_count = 1000*1000;
 
 	for (size_t i = 0; i < gen_count; i++) {
 		if (i % (gen_count / 10) == 0)
