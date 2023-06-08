@@ -64,6 +64,9 @@ void stuc_nnFree(stuc_nn nn);
 
 #ifndef NO_STDIO
 	#include <stdio.h>	
+#else 
+	#undef MAT_PRINT
+	#undef NN_PRINT
 #endif
 
 
@@ -116,20 +119,6 @@ void stuc_matFree(stuc_mat a) {
 	(void)a;
 
 	return;
-}
-
-void stuc_matPrint(stuc_mat a, char* name, int indent) {
-	printf("%*s%s = [\n", (int)indent, "", name);
-
-	for (size_t i = 0; i < a.rows; i++) {
-		printf("\t%*s", (int)indent, "");
-		for (size_t j = 0; j < a.cols; j++) {
-			printf("%10.7f  ", STUC_MAT_AT(a, i, j));
-		}
-		printf("\n");
-	}
-
-	printf("%*s]\n", (int)indent, "");
 }
 
 void stuc__matAddSub(stuc_mat a, stuc_mat b, int addSub) {
@@ -204,6 +193,21 @@ void stuc_nnForward(stuc_nn nn) {
 	return;
 }
 
+#ifndef NO_STDIO
+void stuc_matPrint(stuc_mat a, char* name, int indent) {
+	printf("%*s%s = [\n", (int)indent, "", name);
+
+	for (size_t i = 0; i < a.rows; i++) {
+		printf("\t%*s", (int)indent, "");
+		for (size_t j = 0; j < a.cols; j++) {
+			printf("%10.7f  ", STUC_MAT_AT(a, i, j));
+		}
+		printf("\n");
+	}
+
+	printf("%*s]\n", (int)indent, "");
+}
+
 void stuc_nnPrint(stuc_nn nn, char* name) {
 	printf("\n%s = [\n", name);
 
@@ -221,6 +225,7 @@ void stuc_nnPrint(stuc_nn nn, char* name) {
 
 	printf("]\n");
 }
+#endif // NO_STDIO
 
 void stuc_nnFill(stuc_nn nn, float_t number) {
 	stuc_matFill(nn.ap[0], number);
