@@ -1,7 +1,7 @@
 #ifndef TESTOVI_H
 #define TESTOVI_H
 
-#include "stuc.h"
+#include "../src/stuc.h"
 #include <stdio.h>
 #include <time.h>
 
@@ -86,8 +86,8 @@ int test_matDot_RazliciteVelicine() {
 	
 	stuc_matDot(dest, a, b);
 	
-	if (MAT_AT(dest, 0, 0) != 7.375) return false;
-	if (MAT_AT(dest, 1, 0) != 34.75) return false;
+	if (STUC_MAT_AT(dest, 0, 0) != 7.375) return false;
+	if (STUC_MAT_AT(dest, 1, 0) != 34.75) return false;
 	
 	stuc_matFree(dest);
 	return true;
@@ -103,10 +103,10 @@ int test_matDot_Redosljed() {
 	
 	stuc_matDot(dest, a, b);
 	
-	if (MAT_AT(dest, 0, 0) != 19) return false;
-	if (MAT_AT(dest, 0, 1) != 30) return false;
-	if (MAT_AT(dest, 1, 0) != -19.5) return false;
-	if (MAT_AT(dest, 1, 1) != 2.5) return false;
+	if (STUC_MAT_AT(dest, 0, 0) != 19) return false;
+	if (STUC_MAT_AT(dest, 0, 1) != 30) return false;
+	if (STUC_MAT_AT(dest, 1, 0) != -19.5) return false;
+	if (STUC_MAT_AT(dest, 1, 1) != 2.5) return false;
 	
 	stuc_matFree(dest);
 
@@ -134,9 +134,9 @@ int test_nnCost() {
 
 	stuc_nn nn = {1, &w1, &b1, a};
 
-	MAT_AT(w1, 0, 0) = 4.645961;
-	MAT_AT(w1, 1, 0) = 4.646396;
-	MAT_AT(b1, 0, 0) = -7.064404;
+	STUC_MAT_AT(w1, 0, 0) = 4.645961;
+	STUC_MAT_AT(w1, 1, 0) = 4.646396;
+	STUC_MAT_AT(b1, 0, 0) = -7.064404;
 
 	float_t cost = stuc_nnCost(nn, tInput, tOutput);
 	float_t eps  = 1e-6; 

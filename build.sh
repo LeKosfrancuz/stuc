@@ -7,5 +7,5 @@ then
 	Debug="-g" 
 fi
 
-gcc src/xor.c -o Xor.out $CFlags $Debug && echo "Finished Building" || echo "Build Failed"
+gcc demo/xor.c -o Xor.out $CFlags $Debug && echo "Finished Building" || echo "Build Failed"
 
