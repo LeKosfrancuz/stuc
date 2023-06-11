@@ -37,26 +37,28 @@ int test_nnForward() {
 	stuc_mat a[] = {stuc_matAlloc(1, 2), stuc_matAlloc(1, 1)};
 	stuc_mat w1 = stuc_matAlloc(2, 1);
 	stuc_mat b1 = stuc_matAlloc(1, 1);
+	
+	stuc_nnLayer layers[] = {{STUC_ACTIVATE_SIGMOID, w1, b1, a[0]}, {STUC_ACTIVATE_SIGMOID, w1, b1, a[1]}};
 
-	stuc_nn nn = {1, &w1, &b1, a};
+	stuc_nn nn = {1, layers};
 
 	stuc_matFill(a[0], 14);
 	// MAT_PRINT(a[0]);
 	// NN_PRINT(nn);
 	stuc_nnFill(nn, 14);
-	size_t inputs = nn.ap[0].cols;
-	nn.wp[0].el[0] = 0;
-	nn.bp[0].el[1] = 0;
-	nn.bp[0].el[0] = 0;
+	size_t inputs = STUC_NN_INPUT(nn).cols;
+	STUC_NN_AT(nn, 0).w.el[0] = 0;
+	STUC_NN_AT(nn, 0).b.el[1] = 0;
+	STUC_NN_AT(nn, 0).b.el[0] = 0;
 
 	bool passed = true;
 	for (size_t i = 0; i < inputs; i++) {
 		for (size_t j = 0; j < inputs; j++) {
-			STUC_NN_INPUT(nn)[0] = i;
-			STUC_NN_INPUT(nn)[1] = j;
+			STUC_NN_INPUT(nn).el[0] = i;
+			STUC_NN_INPUT(nn).el[1] = j;
 
 			stuc_nnForward(nn);
-			float_t res = STUC_NN_OUTPUT(nn)[0];
+			float_t res = STUC_NN_OUTPUT(nn).el[0];
 			if (j % 2 == 0) {
 				if (res != 0.5)
 					passed = false;
@@ -132,7 +134,9 @@ int test_nnCost() {
 	stuc_mat w1 = stuc_matAlloc(2, 1);
 	stuc_mat b1 = stuc_matAlloc(1, 1);
 
-	stuc_nn nn = {1, &w1, &b1, a};
+	stuc_nnLayer layers[] = {{STUC_ACTIVATE_SIGMOID, w1, b1, a[0]}, {STUC_ACTIVATE_SIGMOID, w1, b1, a[1]}};
+
+	stuc_nn nn = {1, layers};
 
 	STUC_MAT_AT(w1, 0, 0) = 4.645961;
 	STUC_MAT_AT(w1, 1, 0) = 4.646396;
