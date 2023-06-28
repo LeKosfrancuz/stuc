@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <time.h>
 
+#define PI 3.1415926535897932384626433832795028841971693993751058209749445923
 #define PASS "\x1B[1;32mpass\x1B[0;37m"
 #define FAIL "\x1B[1;31mfail\x1B[0;37m"
 
@@ -12,6 +13,20 @@ int test_nnForward();
 int test_matDot_Redosljed();
 int test_matDot_RazliciteVelicine();
 int test_nnCost();
+int test_activationDerivRELU_veceOdNula();
+int test_activationDerivRELU_manjeOdNula();
+int test_activationDerivRELU_jednakoNula();
+int test_activationDerivSIGMOID_minusJedan();
+int test_activationDerivSIGMOID_plusJedan();
+int test_activationDerivSIGMOID_jednaPolovina();
+int test_activationDerivTANH_dva();
+int test_activationDerivTANH_minusDva();
+int test_activationDerivTANH_cetiri();
+int test_activationDerivSIN_0();
+int test_activationDerivSIN_45();
+int test_activationDerivSIN_90();
+int test_activationDerivSIN_180();
+int test_matRow_tocnostKopiranja();
 
 #endif // TESTOVI_H
 
@@ -20,13 +35,51 @@ int test_nnCost();
 void test_runAll() {
 	printf("Forward Test: %s\n", 
 		test_nnForward() ? PASS : FAIL);
+
 	printf("matDot Tests: \n");
 	printf("\t\t  Redosljed: %s\n", 
 		test_matDot_Redosljed() ? PASS : FAIL);
 	printf("\t Razlicite Velicine: %s\n", 
 		test_matDot_RazliciteVelicine() ? PASS : FAIL);
+	printf("matRow Test: %s\n", 
+		test_matRow_tocnostKopiranja() ? PASS : FAIL);
 	printf("nnCost Test: %s\n", 
 		test_nnCost() ? PASS : FAIL);
+
+	printf("Derivitive Tests: \n");
+	printf("\t RELU tests:\n");
+	printf("\t\t  RELU > 0: %s\n", 
+		test_activationDerivRELU_veceOdNula() ? PASS : FAIL);
+	printf("\t\t  RELU < 0: %s\n", 
+		test_activationDerivRELU_manjeOdNula() ? PASS : FAIL);
+	printf("\t\t  RELU = 0: %s\n", 
+		test_activationDerivRELU_jednakoNula() ? PASS : FAIL);
+
+	printf("\t SIGMOID tests:\n");
+	printf("\t\t  SIGMOID =  -1: %s\n", 
+		test_activationDerivSIGMOID_minusJedan() ? PASS : FAIL);
+	printf("\t\t  SIGMOID = 0.5: %s\n", 
+		test_activationDerivSIGMOID_jednaPolovina() ? PASS : FAIL);
+	printf("\t\t  SIGMOID =   1: %s\n", 
+		test_activationDerivSIGMOID_plusJedan() ? PASS : FAIL);
+
+	printf("\t TANH tests:\n");
+	printf("\t\t  TANH =  2: %s\n", 
+		test_activationDerivTANH_dva() ? PASS : FAIL);
+	printf("\t\t  TANH = -2: %s\n", 
+		test_activationDerivTANH_minusDva() ? PASS : FAIL);
+	printf("\t\t  TANH =  4: %s\n", 
+		test_activationDerivTANH_cetiri() ? PASS : FAIL);
+
+	printf("\t SIN tests:\n");
+	printf("\t\t  SIN =   0: %s\n", 
+		test_activationDerivSIN_0() ? PASS : FAIL);
+	printf("\t\t  SIN =  45: %s\n", 
+		test_activationDerivSIN_45() ? PASS : FAIL);
+	printf("\t\t  SIN =  90: %s\n", 
+		test_activationDerivSIN_90() ? PASS : FAIL);
+	printf("\t\t  SIN = 180: %s\n", 
+		test_activationDerivSIN_180() ? PASS : FAIL);
 	printf("Hello, World!\n");
  
 	return;
@@ -40,7 +93,7 @@ int test_nnForward() {
 	
 	Stuc_nnLayer layers[] = {{STUC_ACTIVATE_SIGMOID, w1, b1, a[0]}, {STUC_ACTIVATE_SIGMOID, w1, b1, a[1]}};
 
-	Stuc_nn nn = {1, layers};
+	Stuc_nn nn = {NULL, NULL, 1, layers};
 
 	stuc_matFill(a[0], 14);
 	// MAT_PRINT(a[0]);
@@ -136,7 +189,7 @@ int test_nnCost() {
 
 	Stuc_nnLayer layers[] = {{STUC_ACTIVATE_SIGMOID, w1, b1, a[0]}, {STUC_ACTIVATE_SIGMOID, w1, b1, a[1]}};
 
-	Stuc_nn nn = {1, layers};
+	Stuc_nn nn = {NULL, NULL, 1, layers};
 
 	STUC_MAT_AT(w1, 0, 0) = 4.645961;
 	STUC_MAT_AT(w1, 1, 0) = 4.646396;
@@ -148,6 +201,125 @@ int test_nnCost() {
 
 	if (cost < expectedCost + eps && cost > expectedCost - eps) return true;
 	else return false;
+}
+
+float_t stuc__activationDerivative(float_t x, Stuc_activationFunction f);
+
+int test_activationDerivRELU_veceOdNula() {
+	float_t ret = stuc__activationDerivative(10*1000, STUC_ACTIVATE_RELU);
+	if (ret == 1.0) return true;
+
+	return false;
+}
+
+int test_activationDerivRELU_manjeOdNula() {
+	float_t ret = stuc__activationDerivative(-10*1000, STUC_ACTIVATE_RELU);
+	if (ret == (float_t)STUC_LRELU_FACT) return true;
+
+	return false;
+}
+
+int test_activationDerivRELU_jednakoNula() {
+	float_t ret = stuc__activationDerivative(0, STUC_ACTIVATE_RELU);
+	if (ret == (float_t)STUC_LRELU_FACT) return true;
+
+	return false;
+}
+
+int test_activationDerivSIGMOID_minusJedan() {
+	float_t ret = stuc__activationDerivative(-1, STUC_ACTIVATE_SIGMOID);
+	if (ret == -2.0) return true;
+
+	return false;
+}
+
+int test_activationDerivSIGMOID_plusJedan() {
+	float_t ret = stuc__activationDerivative(1, STUC_ACTIVATE_SIGMOID);
+	if (ret == 0.0) return true;
+
+	return false;
+}
+
+int test_activationDerivSIGMOID_jednaPolovina() {
+	float_t ret = stuc__activationDerivative(0.5, STUC_ACTIVATE_SIGMOID);
+	if (ret == 0.25) return true;
+
+	return false;
+}
+
+int test_activationDerivTANH_dva() {
+	float_t ret = stuc__activationDerivative(2, STUC_ACTIVATE_TANH);
+	if (ret == -3) return true;
+
+	return false;
+}
+
+int test_activationDerivTANH_minusDva() {
+	float_t ret = stuc__activationDerivative(-2, STUC_ACTIVATE_TANH);
+	if (ret == -3) return true;
+
+	return false;
+}
+int test_activationDerivTANH_cetiri() {
+	float_t ret = stuc__activationDerivative(4, STUC_ACTIVATE_TANH);
+	if (ret == -15) return true;
+
+	return false;
+}
+
+int test_activationDerivSIN_0() {
+	float_t sin0 = sin(0);
+	float_t ret = stuc__activationDerivative(sin0, STUC_ACTIVATE_SIN);
+	if (ret == (float_t)cos(0)) return true;
+
+	// printf("cos(0) %f, ret %f\n", cos(0), ret);
+	return false;
+}
+
+int test_activationDerivSIN_45() {
+	float_t sin45 = sin(PI/4);
+	float_t ret = stuc__activationDerivative(sin45, STUC_ACTIVATE_SIN);
+	if (ret == (float_t)cos(PI/4)) return true;
+
+	// printf("cos(PI/4) %f, ret %f\n", cos(PI/4), ret);
+	return false;
+}
+
+int test_activationDerivSIN_90() {
+	float_t sin90 = sin(PI/2);
+	float_t ret = stuc__activationDerivative(sin90, STUC_ACTIVATE_SIN);
+	if (ret == (float_t)cos(PI/2)) return true;
+
+	// printf("cos(PI/2) %f, ret %f\n", cos(PI/2), ret);
+	return false;
+}
+
+int test_activationDerivSIN_180() {
+	float_t sin180 = sin(PI);
+	float_t ret = stuc__activationDerivative(sin180, STUC_ACTIVATE_SIN);
+	if (ret == (float_t)cos(PI)) return true;
+
+	// printf("cos(PI) %f, ret %f\n", cos(PI), ret);
+	return false;
+}
+
+int test_matRow_tocnostKopiranja() {
+	float_t tData[] = {
+		1, 2, 0,
+		3, 4, 1,
+		5, 6, 2,
+		7, 8, 3
+	};
+
+	Stuc_mat tInput = {4, 2, 3, tData};
+
+	Stuc_mat row = stuc_matRow(tInput, 2);
+
+
+	if (STUC_MAT_AT(row, 0, 0) == 5.0 && STUC_MAT_AT(row, 0, 1) == 6.0)
+		return true;
+
+	return false;
 }
 
 #endif // TESTOVI_IMPLEMENTATION
