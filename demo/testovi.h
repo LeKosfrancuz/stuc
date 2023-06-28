@@ -34,13 +34,13 @@ void test_runAll() {
 
 
 int test_nnForward() {
-	stuc_mat a[] = {stuc_matAlloc(1, 2), stuc_matAlloc(1, 1)};
-	stuc_mat w1 = stuc_matAlloc(2, 1);
-	stuc_mat b1 = stuc_matAlloc(1, 1);
+	Stuc_mat a[] = {stuc_matAlloc(1, 2), stuc_matAlloc(1, 1)};
+	Stuc_mat w1 = stuc_matAlloc(2, 1);
+	Stuc_mat b1 = stuc_matAlloc(1, 1);
 	
-	stuc_nnLayer layers[] = {{STUC_ACTIVATE_SIGMOID, w1, b1, a[0]}, {STUC_ACTIVATE_SIGMOID, w1, b1, a[1]}};
+	Stuc_nnLayer layers[] = {{STUC_ACTIVATE_SIGMOID, w1, b1, a[0]}, {STUC_ACTIVATE_SIGMOID, w1, b1, a[1]}};
 
-	stuc_nn nn = {1, layers};
+	Stuc_nn nn = {1, layers};
 
 	stuc_matFill(a[0], 14);
 	// MAT_PRINT(a[0]);
@@ -82,9 +82,9 @@ int test_matDot_RazliciteVelicine() {
 	float_t aDat[] = {1, 2, 3, 4, 5, 6};
 	float_t bDat[] = {16, -12, 5.125};
 
-	stuc_mat a = {2, 3, 3, aDat};
-	stuc_mat b = {3, 1, 1, bDat};
-	stuc_mat dest = stuc_matAlloc(2, 1);
+	Stuc_mat a = {2, 3, 3, aDat};
+	Stuc_mat b = {3, 1, 1, bDat};
+	Stuc_mat dest = stuc_matAlloc(2, 1);
 	
 	stuc_matDot(dest, a, b);
 	
@@ -99,9 +99,9 @@ int test_matDot_Redosljed() {
 	float_t aDat[] = {16, 2, 3.25, 4};
 	float_t bDat[] = {2, 2, -6.5, -1};
 
-	stuc_mat a = {2, 2, 2, aDat};
-	stuc_mat b = {2, 2, 2, bDat};
-	stuc_mat dest = stuc_matAlloc(2, 2);
+	Stuc_mat a = {2, 2, 2, aDat};
+	Stuc_mat b = {2, 2, 2, bDat};
+	Stuc_mat dest = stuc_matAlloc(2, 2);
 	
 	stuc_matDot(dest, a, b);
 	
@@ -127,16 +127,16 @@ int test_nnCost() {
 		1, 1, 1
 	};
 
-	stuc_mat tInput = {4, 2, 3, tData};
-	stuc_mat tOutput = {4, 1, 3, tData+2};
+	Stuc_mat tInput = {4, 2, 3, tData};
+	Stuc_mat tOutput = {4, 1, 3, tData+2};
 
-	stuc_mat a[] = {stuc_matAlloc(1, 2), stuc_matAlloc(1, 1)};
-	stuc_mat w1 = stuc_matAlloc(2, 1);
-	stuc_mat b1 = stuc_matAlloc(1, 1);
+	Stuc_mat a[] = {stuc_matAlloc(1, 2), stuc_matAlloc(1, 1)};
+	Stuc_mat w1 = stuc_matAlloc(2, 1);
+	Stuc_mat b1 = stuc_matAlloc(1, 1);
 
-	stuc_nnLayer layers[] = {{STUC_ACTIVATE_SIGMOID, w1, b1, a[0]}, {STUC_ACTIVATE_SIGMOID, w1, b1, a[1]}};
+	Stuc_nnLayer layers[] = {{STUC_ACTIVATE_SIGMOID, w1, b1, a[0]}, {STUC_ACTIVATE_SIGMOID, w1, b1, a[1]}};
 
-	stuc_nn nn = {1, layers};
+	Stuc_nn nn = {1, layers};
 
 	STUC_MAT_AT(w1, 0, 0) = 4.645961;
 	STUC_MAT_AT(w1, 1, 0) = 4.646396;

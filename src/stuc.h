@@ -20,17 +20,17 @@ typedef struct {
 	size_t cols;
 	size_t stride;
 	float_t *el;
-} stuc_mat;
+} Stuc_mat;
 
-void stuc_matAdd(stuc_mat a, stuc_mat b);
-void stuc_matSub(stuc_mat a, stuc_mat b);
-void stuc_matDot(stuc_mat dest, stuc_mat a, stuc_mat b);
-void stuc_matCpy(stuc_mat dst, stuc_mat src);
-bool stuc_matEq(stuc_mat a, stuc_mat b);
-void stuc_matFill(stuc_mat a, float_t number);
-void stuc_matPrint(stuc_mat a, char* name, int indent);
-stuc_mat stuc_matAlloc(size_t rows, size_t cols);
-void stuc_matFree(stuc_mat a);
+void stuc_matAdd(Stuc_mat a, Stuc_mat b);
+void stuc_matSub(Stuc_mat a, Stuc_mat b);
+void stuc_matDot(Stuc_mat dest, Stuc_mat a, Stuc_mat b);
+void stuc_matCpy(Stuc_mat dst, Stuc_mat src);
+bool stuc_matEq(Stuc_mat a, Stuc_mat b);
+void stuc_matFill(Stuc_mat a, float_t number);
+void stuc_matPrint(Stuc_mat a, char* name, int indent);
+Stuc_mat stuc_matAlloc(size_t rows, size_t cols);
+void stuc_matFree(Stuc_mat a);
 
 
 typedef enum {
@@ -39,29 +39,29 @@ typedef enum {
 	STUC_ACTIVATE_TANH,
 	STUC_ACTIVATE_SIN,
 	STUC_ACTIVATIONS_COUNT
-} stuc_activationFunction;
+} Stuc_activationFunction;
 
 typedef struct {
-	stuc_activationFunction activation;
-	stuc_mat w; // weights
-	stuc_mat b; // biases
-	stuc_mat a; // aktivacije
-} stuc_nnLayer;
+	Stuc_activationFunction activation;
+	Stuc_mat w; // weights
+	Stuc_mat b; // biases
+	Stuc_mat a; // aktivacije
+} Stuc_nnLayer;
 
 typedef struct {
 	size_t count;
-	stuc_nnLayer* layers; // count + 1, jer je 0. za input
-} stuc_nn;
+	Stuc_nnLayer* layers; // count + 1, jer je 0. za input
+} Stuc_nn;
 
-void stuc_nnForward(stuc_nn nn);
-void stuc_nnFill(stuc_nn nn, float_t number);
-void stuc_nnRand(stuc_nn nn, float_t low, float_t high);
-void stuc_nnPrint(stuc_nn nn, char* name);
-float_t stuc_nnCost(stuc_nn nn, stuc_mat tInput, stuc_mat tOutput);
-void stuc_nnFiniteDiff(stuc_nn fd, stuc_nn nn, float_t eps, stuc_mat tInput, stuc_mat tOutput);
-void stuc_nnApplyDiff(stuc_nn nn, stuc_nn fd, float_t learningRate);
-stuc_nn stuc_nnAlloc(stuc_activationFunction* aktivacije, size_t* arhitektura, size_t arhCount);
-void stuc_nnFree(stuc_nn nn); 
+void stuc_nnForward(Stuc_nn nn);
+void stuc_nnFill(Stuc_nn nn, float_t number);
+void stuc_nnRand(Stuc_nn nn, float_t low, float_t high);
+void stuc_nnPrint(Stuc_nn nn, char* name);
+float_t stuc_nnCost(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput);
+void stuc_nnFiniteDiff(Stuc_nn fd, Stuc_nn nn, float_t eps, Stuc_mat tInput, Stuc_mat tOutput);
+void stuc_nnApplyDiff(Stuc_nn nn, Stuc_nn fd, float_t learningRate);
+Stuc_nn stuc_nnAlloc(Stuc_activationFunction* aktivacije, size_t* arhitektura, size_t arhCount);
+void stuc_nnFree(Stuc_nn nn); 
 
 #ifndef STUC_MALLOC
 	#define STUC_MALLOC malloc
@@ -118,7 +118,7 @@ float_t stuc__sin(float_t x) {
 	// Deriv: cos(x);
 }
 
-void stuc__matRand(stuc_mat a, float_t low, float_t high) {
+void stuc__matRand(Stuc_mat a, float_t low, float_t high) {
 	for (size_t i = 0; i < a.rows; i++) {
 		for (size_t j = 0; j < a.cols; j++) {
 			STUC_MAT_AT(a, i, j) = stuc__randFloat() * (high - low) + low;
@@ -128,7 +128,7 @@ void stuc__matRand(stuc_mat a, float_t low, float_t high) {
 	return;
 }
 
-void stuc_matFill(stuc_mat a, float_t number) {
+void stuc_matFill(Stuc_mat a, float_t number) {
 	for (size_t i = 0; i < a.rows; i++) {
 		for (size_t j = 0; j < a.cols; j++){
 			STUC_MAT_AT(a, i, j) = number;
@@ -137,8 +137,8 @@ void stuc_matFill(stuc_mat a, float_t number) {
 	return;
 }
 
-stuc_mat stuc_matAlloc(size_t rows, size_t cols) {
-	stuc_mat a;
+Stuc_mat stuc_matAlloc(size_t rows, size_t cols) {
+	Stuc_mat a;
 	a.rows = rows;
 	a.stride = cols;
 	a.cols = cols;
@@ -149,14 +149,14 @@ stuc_mat stuc_matAlloc(size_t rows, size_t cols) {
 	return a;
 }
 
-void stuc_matFree(stuc_mat a) {
+void stuc_matFree(Stuc_mat a) {
 	STUC_FREE(a.el);
 	(void)a;
 
 	return;
 }
 
-void stuc__matAddSub(stuc_mat a, stuc_mat b, int addSub) {
+void stuc__matAddSub(Stuc_mat a, Stuc_mat b, int addSub) {
 	STUC_ASSERT(addSub == 1 || addSub == -1);
 	STUC_ASSERT(a.rows == b.rows);
 	STUC_ASSERT(a.cols == b.cols);
@@ -168,26 +168,26 @@ void stuc__matAddSub(stuc_mat a, stuc_mat b, int addSub) {
 	return;
 }
 
-void stuc_matAdd(stuc_mat a, stuc_mat b) {
+void stuc_matAdd(Stuc_mat a, Stuc_mat b) {
 	stuc__matAddSub(a, b, 1);
 
 	return;
 }
 
-void stuc_matSub(stuc_mat a, stuc_mat b) {
+void stuc_matSub(Stuc_mat a, Stuc_mat b) {
 	stuc__matAddSub(a, b, -1);
 
 	return;
 }
 
-void stuc_matCpy(stuc_mat dst, stuc_mat src) {
+void stuc_matCpy(Stuc_mat dst, Stuc_mat src) {
 	stuc_matFill(dst, 0);
 	stuc__matAddSub(dst, src, 1);
 	
 	return;
 }
 
-bool stuc_matEq(stuc_mat a, stuc_mat b) {
+bool stuc_matEq(Stuc_mat a, Stuc_mat b) {
 	if (a.rows != b.rows) return false;
 	if (a.cols != b.cols) return false;
 	
@@ -199,7 +199,7 @@ bool stuc_matEq(stuc_mat a, stuc_mat b) {
 	return true;
 }
 
-void stuc_matDot(stuc_mat dest, stuc_mat a, stuc_mat b) {
+void stuc_matDot(Stuc_mat dest, Stuc_mat a, Stuc_mat b) {
 	STUC_ASSERT(a.cols == b.rows);
 	STUC_ASSERT(dest.rows == a.rows);
 	STUC_ASSERT(dest.cols == b.cols);
@@ -214,7 +214,7 @@ void stuc_matDot(stuc_mat dest, stuc_mat a, stuc_mat b) {
 	}
 }
 
-void stuc__matActivate(stuc_mat a, stuc_activationFunction f) {
+void stuc__matActivate(Stuc_mat a, Stuc_activationFunction f) {
 	float_t (*activation)(float_t) = &stuc__sigmoid;
 	
 	switch(f) {
@@ -236,7 +236,7 @@ void stuc__matActivate(stuc_mat a, stuc_activationFunction f) {
 }
 
 
-void stuc_nnForward(stuc_nn nn) {
+void stuc_nnForward(Stuc_nn nn) {
 	
 	for (size_t layer = 1; layer <= nn.count; layer++) {
 		stuc_matDot(STUC_NN_AT(nn, layer).a, STUC_NN_AT(nn, layer - 1).a, STUC_NN_AT(nn, layer).w);
@@ -249,7 +249,7 @@ void stuc_nnForward(stuc_nn nn) {
 }
 
 #ifndef NO_STDIO
-void stuc_matPrint(stuc_mat a, char* name, int indent) {
+void stuc_matPrint(Stuc_mat a, char* name, int indent) {
 	printf("%*s%s = [\n", (int)indent, "", name);
 
 	for (size_t i = 0; i < a.rows; i++) {
@@ -263,7 +263,7 @@ void stuc_matPrint(stuc_mat a, char* name, int indent) {
 	printf("%*s]\n", (int)indent, "");
 }
 
-void stuc_nnPrint(stuc_nn nn, char* name) {
+void stuc_nnPrint(Stuc_nn nn, char* name) {
 	printf("\n%s = [\n", name);
 
 	stuc_matPrint(STUC_NN_INPUT(nn), "input", 4);
@@ -281,7 +281,7 @@ void stuc_nnPrint(stuc_nn nn, char* name) {
 }
 #endif // NO_STDIO
 
-void stuc_nnFill(stuc_nn nn, float_t number) {
+void stuc_nnFill(Stuc_nn nn, float_t number) {
 	stuc_matFill(STUC_NN_INPUT(nn), number);
 	for (size_t i = 1; i <= nn.count; i++) {
 		stuc_matFill(STUC_NN_AT(nn, i).w, number);
@@ -292,7 +292,7 @@ void stuc_nnFill(stuc_nn nn, float_t number) {
 	return;
 }
 
-void stuc_nnRand(stuc_nn nn, float_t low, float_t high) {
+void stuc_nnRand(Stuc_nn nn, float_t low, float_t high) {
 	stuc__matRand(STUC_NN_INPUT(nn), low, high);
 	for (size_t i = 0; i < nn.count; i++) {
 		stuc__matRand(STUC_NN_AT(nn, i).a, low, high);
@@ -303,7 +303,7 @@ void stuc_nnRand(stuc_nn nn, float_t low, float_t high) {
 	return;
 }
 
-float_t stuc_nnCost(stuc_nn nn, stuc_mat tInput, stuc_mat tOutput) {
+float_t stuc_nnCost(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput) {
 	STUC_ASSERT(tInput.rows == tOutput.rows);
 	STUC_ASSERT(tInput.cols == STUC_NN_INPUT(nn).cols);
 	STUC_ASSERT(tOutput.cols == STUC_NN_OUTPUT(nn).cols);
@@ -346,7 +346,7 @@ float_t stuc_nnCost(stuc_nn nn, stuc_mat tInput, stuc_mat tOutput) {
 	return cost/samples;
 }
 
-void stuc_nnFiniteDiff(stuc_nn fd, stuc_nn nn, float_t eps, stuc_mat tInput, stuc_mat tOutput) {
+void stuc_nnFiniteDiff(Stuc_nn fd, Stuc_nn nn, float_t eps, Stuc_mat tInput, Stuc_mat tOutput) {
 	STUC_ASSERT(fd.count == nn.count);
 	float_t originalCost = stuc_nnCost(nn, tInput, tOutput);
 
@@ -380,7 +380,7 @@ void stuc_nnFiniteDiff(stuc_nn fd, stuc_nn nn, float_t eps, stuc_mat tInput, stu
 
 }
 
-void stuc_nnApplyDiff(stuc_nn nn, stuc_nn fd, float_t learningRate) {
+void stuc_nnApplyDiff(Stuc_nn nn, Stuc_nn fd, float_t learningRate) {
 	STUC_ASSERT(fd.count == nn.count);
 	
 	for (size_t layer = 1; layer <= nn.count; layer++) {
@@ -398,11 +398,11 @@ void stuc_nnApplyDiff(stuc_nn nn, stuc_nn fd, float_t learningRate) {
 	return;
 }
 
-stuc_nn stuc_nnAlloc(stuc_activationFunction* aktivacije, size_t* arhitektura, size_t arhCount) {
+Stuc_nn stuc_nnAlloc(Stuc_activationFunction* aktivacije, size_t* arhitektura, size_t arhCount) {
 	
-	stuc_nn nn;
+	Stuc_nn nn;
 	nn.count  = arhCount - 1; // nn.count ne ukljucuje a[0];
-	nn.layers = STUC_MALLOC(sizeof (stuc_nnLayer) * (arhCount));
+	nn.layers = STUC_MALLOC(sizeof (Stuc_nnLayer) * (arhCount));
 
 	STUC_NN_INPUT(nn) = stuc_matAlloc(1, arhitektura[0]);
 	for (size_t layer = 1; layer <= nn.count; layer++) {
@@ -415,7 +415,7 @@ stuc_nn stuc_nnAlloc(stuc_activationFunction* aktivacije, size_t* arhitektura, s
 	return nn;
 }
 
-void stuc_nnFree(stuc_nn nn) { 
+void stuc_nnFree(Stuc_nn nn) { 
 	stuc_matFree(STUC_NN_INPUT(nn));
 	for (size_t layer = 1; layer <= nn.count; layer++) {
 		stuc_matFree(STUC_NN_AT(nn, layer).a);

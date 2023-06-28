@@ -17,13 +17,13 @@ int main() {
 
 	srand(time(0));
 	// srand(14);
-	stuc_mat tInput = {4, 2, 3, tData};
-	stuc_mat tOutput = {4, 1, 3, tData+2};
+	Stuc_mat tInput = {4, 2, 3, tData};
+	Stuc_mat tOutput = {4, 1, 3, tData+2};
 
 	size_t arch[] = {2, 2, 1};
-	stuc_activationFunction funk[] = {STUC_ACTIVATE_SIGMOID, STUC_ACTIVATE_SIGMOID};
-	stuc_nn nn = stuc_nnAlloc(funk, arch, STUC_LENP(arch));
-	stuc_nn fd = stuc_nnAlloc(funk, arch, STUC_LENP(arch));
+	Stuc_activationFunction funk[] = {STUC_ACTIVATE_SIGMOID, STUC_ACTIVATE_SIGMOID};
+	Stuc_nn nn = stuc_nnAlloc(funk, arch, STUC_LENP(arch));
+	Stuc_nn fd = stuc_nnAlloc(funk, arch, STUC_LENP(arch));
 
 	stuc_nnRand(nn, -1, 1);
 
