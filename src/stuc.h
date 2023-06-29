@@ -70,24 +70,27 @@ void stuc_nnFree(Stuc_nn nn);
 #ifndef STUC_MALLOC
 	#define STUC_MALLOC malloc
 	#include <stdlib.h>
-#endif
+#endif // STUC_MALLOC
 
 #ifndef STUC_FREE
 	#define STUC_FREE free
 	#include <stdlib.h>
-#endif
+#endif // STUC_FREE
 
 #ifndef STUC_ASSERT
 	#define STUC_ASSERT assert
+	#define STUC_SOFT_ASSERT(uvijet) ((uvijet) ? 1 : 0 * printf("\x1b[1;31mAssert failed\x1b[0;37m in file: %s:%d %s: `%s`\n", __FILE__, __LINE__, __func__, #uvijet))
 	#include <assert.h>
-#endif
+#else
+	#define STUC_SOFT_ASSERT STUC_ASSERT
+#endif // STUC_ASSERT
 
 #ifndef NO_STDIO
 	#include <stdio.h>	
 #else 
 	#undef MAT_PRINT
 	#undef NN_PRINT
-#endif
+#endif // NO_STDIO
 
 
 #endif // STUC_H
@@ -230,7 +233,7 @@ void stuc__matActivate(Stuc_mat a, Stuc_activationFunction f) {
 	}
 
 	STUC_ASSERT(a.rows == 1);
-	STUC_ASSERT(a.cols >= 1);
+	STUC_SOFT_ASSERT(a.cols >= 1);
 
 	for (size_t i = 0; i < a.cols; i++) {
 		STUC_MAT_AT(a, 0, i) = activation(STUC_MAT_AT(a, 0, i));
