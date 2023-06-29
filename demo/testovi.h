@@ -203,7 +203,7 @@ int test_nnCost() {
 	else return false;
 }
 
-float_t stuc__activationDerivative(float_t x, Stuc_activationFunction f);
+extern float_t stuc__activationDerivative(float_t x, Stuc_activationFunction f);
 
 int test_activationDerivRELU_veceOdNula() {
 	float_t ret = stuc__activationDerivative(10*1000, STUC_ACTIVATE_RELU);

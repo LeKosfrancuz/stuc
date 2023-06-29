@@ -148,7 +148,7 @@ Stuc_mat stuc_matAlloc(size_t rows, size_t cols) {
 	a.cols = cols;
 
 	STUC_ASSERT(rows * cols > 0);
-	a.el = STUC_MALLOC(rows * cols * sizeof *a.el);
+	a.el = (float_t*)STUC_MALLOC(rows * cols * sizeof *a.el);
 
 	return a;
 }
@@ -293,7 +293,7 @@ void stuc_matPrint(Stuc_mat a, char* name, int indent) {
 void stuc_nnPrint(Stuc_nn nn, char* name) {
 	printf("\n%s = [\n", name);
 
-	stuc_matPrint(STUC_NN_INPUT(nn), "input", 4);
+	stuc_matPrint(STUC_NN_INPUT(nn), (char*)"input", 4);
 	for (size_t i = 1; i <= nn.layerCount; i++) {
 		char layerName[3][30] = {0};
 		snprintf(layerName[0], 30, "w%zu", i);
@@ -495,8 +495,8 @@ Stuc_nn stuc_nnAlloc(Stuc_activationFunction* aktivacije, size_t* arhitektura, s
 	Stuc_nn nn;
 	nn.arhitektura = arhitektura;
 	nn.layerCount  = arhCount - 1; // nn.layerCount ne ukljucuje a[0];
-	nn.aktivacije = STUC_MALLOC(sizeof (Stuc_activationFunction) * (arhCount - 1));
-	nn.layers = STUC_MALLOC(sizeof (Stuc_nnLayer) * (arhCount));
+	nn.aktivacije = (Stuc_activationFunction*)STUC_MALLOC(sizeof (Stuc_activationFunction) * (arhCount - 1));
+	nn.layers = (Stuc_nnLayer*)STUC_MALLOC(sizeof (Stuc_nnLayer) * (arhCount));
 
 	for (size_t i = 0; i < arhCount - 1; i++)
 		nn.aktivacije[i] = aktivacije[i];
