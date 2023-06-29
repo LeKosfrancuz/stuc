@@ -61,7 +61,8 @@ void stuc_nnFill(Stuc_nn nn, float_t number);
 void stuc_nnRand(Stuc_nn nn, float_t low, float_t high);
 void stuc_nnPrint(Stuc_nn nn, char* name);
 float_t stuc_nnCost(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput);
-void stuc_nnFiniteDiff(Stuc_nn fd, Stuc_nn nn, float_t eps, Stuc_mat tInput, Stuc_mat tOutput);
+Stuc_nn stuc_nnBackprop(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput, float_t boost);
+Stuc_nn stuc_nnFiniteDiff(Stuc_nn nn, float_t eps, Stuc_mat tInput, Stuc_mat tOutput);
 void stuc_nnApplyDiff(Stuc_nn nn, Stuc_nn fd, float_t learningRate);
 Stuc_nn stuc_nnAlloc(Stuc_activationFunction* aktivacije, size_t* arhitektura, size_t arhCount);
 void stuc_nnFree(Stuc_nn nn); 
@@ -372,11 +373,76 @@ float_t stuc_nnCost(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput) {
 	return cost/samples;
 }
 
-void stuc_nnFiniteDiff(Stuc_nn fd, Stuc_nn nn, float_t eps, Stuc_mat tInput, Stuc_mat tOutput) {
-	STUC_ASSERT(fd.count == nn.count);
+// Matematički izvor: 
+// https://github.com/tsoding/ml-notes/blob/master/papers/grad.pdf
+Stuc_nn stuc_nnBackprop(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput, float_t boost) {
+	STUC_ASSERT(tInput.rows == tOutput.rows);
+	STUC_ASSERT(tInput.cols == STUC_NN_INPUT(nn).cols);
+	STUC_ASSERT(tOutput.cols == STUC_NN_OUTPUT(nn).cols);
+
+	size_t sampleCount = tInput.rows;
+	Stuc_nn gdMap = stuc_nnAlloc(nn.aktivacije, nn.arhitektura, nn.layerCount + 1);
+	stuc_nnFill(gdMap, 0.0);
+
+	for (size_t sample = 0; sample < sampleCount; sample++) {
+		stuc_matCpy(STUC_NN_INPUT(nn), stuc_matRow(tInput, sample));
+		stuc_nnForward(nn);
+
+		for (size_t i = 0; i <= gdMap.layerCount; i++) {
+			stuc_matFill(STUC_NN_AT(gdMap, i).a, 0);
+		}
+
+		for (size_t i = 0; i < tOutput.cols; i++) {
+			STUC_MAT_AT(STUC_NN_OUTPUT(gdMap), 0, i) = boost * (STUC_MAT_AT(STUC_NN_OUTPUT(nn), 0, i) - STUC_MAT_AT(tOutput, sample, i));
+		}
+
+		// layer - current
+		for (size_t layer = nn.layerCount; layer > 0; layer--) {
+			// activation - current
+			for (size_t act = 0; act < STUC_NN_AT(nn, layer).a.cols; act++) {
+				float_t currentAct = STUC_MAT_AT(STUC_NN_AT(nn, layer).a, 0, act);
+				float_t deltaAct = STUC_MAT_AT(STUC_NN_AT(gdMap, layer).a, 0, act);
+				float_t derivAct = stuc__activationDerivative(currentAct, STUC_NN_AT(nn, layer).activation);
+
+				STUC_MAT_AT(STUC_NN_AT(gdMap, layer).b, 0, act) += boost * deltaAct * derivAct;
+
+				for (size_t prevAct = 0; prevAct < STUC_NN_AT(nn, layer - 1).a.cols; prevAct++) {
+					// act - weight matrix col
+					// prevAct - weight matrix row
+					float_t previousAct = STUC_MAT_AT(STUC_NN_AT(nn, layer - 1).a, 0, prevAct);
+					float_t currentWeight = STUC_MAT_AT(STUC_NN_AT(nn, layer).w, prevAct, act);
+
+					STUC_MAT_AT(STUC_NN_AT(gdMap, layer).w, prevAct, act) += boost * deltaAct * derivAct * previousAct;
+					STUC_MAT_AT(STUC_NN_AT(gdMap, layer - 1).a, 0, prevAct) += boost * deltaAct * derivAct * currentWeight;
+					// TODO: podijeliti a_novi sa sampleCount <- prema formuli
+				}
+			}
+		}
+	}
+
+	for (size_t i = 1; i <= gdMap.layerCount; i++) {
+		for (size_t j = 0; j < STUC_NN_AT(gdMap, i).w.rows; j++) {
+			for (size_t k = 0; k < STUC_NN_AT(gdMap, i).w.cols; k++) {
+				STUC_MAT_AT(STUC_NN_AT(gdMap, i).w, j, k) /= sampleCount;
+			}
+		}
+		for (size_t j = 0; j < STUC_NN_AT(gdMap, i).b.cols; j++) {
+			STUC_MAT_AT(STUC_NN_AT(gdMap, i).b, 0, j) /= sampleCount;
+		}
+	}
+
+	return gdMap;
+}
+
+Stuc_nn stuc_nnFiniteDiff(Stuc_nn nn, float_t eps, Stuc_mat tInput, Stuc_mat tOutput) {
+	STUC_ASSERT(tInput.rows == tOutput.rows);
+	STUC_ASSERT(tInput.cols == STUC_NN_INPUT(nn).cols);
+	STUC_ASSERT(tOutput.cols == STUC_NN_OUTPUT(nn).cols);
+
+	Stuc_nn fd = stuc_nnAlloc(nn.aktivacije, nn.arhitektura, nn.layerCount + 1);
 	float_t originalCost = stuc_nnCost(nn, tInput, tOutput);
 
-	for (size_t layer = 1; layer <= nn.count; layer++) {
+	for (size_t layer = 1; layer <= nn.layerCount; layer++) {
 		for (size_t i = 0; i < STUC_NN_AT(nn, layer).w.rows; i++) {
 			for (size_t j = 0; j < STUC_NN_AT(nn, layer).w.cols; j++) {
 				float_t savedW = STUC_MAT_AT(STUC_NN_AT(nn, layer).w, i, j);
@@ -402,7 +468,7 @@ void stuc_nnFiniteDiff(Stuc_nn fd, Stuc_nn nn, float_t eps, Stuc_mat tInput, Stu
 		}
 	}
 
-	return;
+	return fd;
 
 }
 

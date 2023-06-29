@@ -23,16 +23,26 @@ int main() {
 	size_t arch[] = {2, 2, 1};
 	Stuc_activationFunction funk[] = {STUC_ACTIVATE_SIGMOID, STUC_ACTIVATE_SIGMOID};
 	Stuc_nn nn = stuc_nnAlloc(funk, arch, STUC_LENP(arch));
-	Stuc_nn fd = stuc_nnAlloc(funk, arch, STUC_LENP(arch));
+	Stuc_nn gdMap;
 
 	stuc_nnRand(nn, -1, 1);
 
-	size_t gen_count = 200*1000;
-	float_t eps = 1e-3;
-	float_t learningRate = 1e-1;
+	size_t gen_count = 2*100*1000;
+	float_t learningRate = 1;
+
 	for (size_t i = 0; i < gen_count + 1; i++) {
-		stuc_nnFiniteDiff(fd, nn, eps, tInput, tOutput);
-		stuc_nnApplyDiff(nn, fd, learningRate);
+#if 0
+		// Finite Diff
+		float_t eps = 1e-3;
+		gdMap = stuc_nnFiniteDiff(nn, eps, tInput, tOutput);
+#else
+		// Gradient Descent
+		float_t boostMultiplier = 1;
+		gdMap = stuc_nnBackprop(nn, tInput, tOutput, boostMultiplier);
+#endif
+		stuc_nnApplyDiff(nn, gdMap, learningRate);
+		stuc_nnFree(gdMap);
+
 		if (i % (gen_count/10) == 0) {
 			printf("\rcost = %f                          \n", 
 				stuc_nnCost(nn, tInput, tOutput));
