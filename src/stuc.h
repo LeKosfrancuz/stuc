@@ -62,7 +62,9 @@ void stuc_nnRand(Stuc_nn nn, float_t low, float_t high);
 void stuc_nnPrint(Stuc_nn nn, char* name);
 float_t stuc_nnCost(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput);
 Stuc_nn stuc_nnBackprop(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput, float_t boost);
+void stuc_nnBackpropNoAlloc(Stuc_nn nn, Stuc_nn gdMap, Stuc_mat tInput, Stuc_mat tOutput, float_t boost);
 Stuc_nn stuc_nnFiniteDiff(Stuc_nn nn, float_t eps, Stuc_mat tInput, Stuc_mat tOutput);
+void stuc_nnFiniteDiffNoAlloc(Stuc_nn nn, Stuc_nn fd, float_t eps, Stuc_mat tInput, Stuc_mat tOutput);
 void stuc_nnApplyDiff(Stuc_nn nn, Stuc_nn fd, float_t learningRate);
 Stuc_nn stuc_nnAlloc(Stuc_activationFunction* aktivacije, size_t* arhitektura, size_t arhCount);
 void stuc_nnFree(Stuc_nn nn); 
@@ -98,6 +100,11 @@ void stuc_nnFree(Stuc_nn nn);
 
 
 #ifdef STUC_IMPLEMENTATION
+void stuc__matActivate(Stuc_mat a, Stuc_activationFunction f);
+float_t stuc__activationDerivative(float_t x, Stuc_activationFunction f);
+void stuc__matAddSub(Stuc_mat a, Stuc_mat b, int addSub);
+void stuc__nnBackprop(Stuc_nn nn, Stuc_nn gdMap, Stuc_mat tInput, Stuc_mat tOutput, float_t boost);
+void stuc__nnFiniteDiff(Stuc_nn nn, Stuc_nn fd, float_t eps, Stuc_mat tInput, Stuc_mat tOutput);
 
 float_t stuc__randFloat() {
 	return rand() / (float_t) RAND_MAX;
@@ -138,7 +145,7 @@ void stuc__matRand(Stuc_mat a, float_t low, float_t high) {
 
 void stuc_matFill(Stuc_mat a, float_t number) {
 	for (size_t i = 0; i < a.rows; i++) {
-		for (size_t j = 0; j < a.cols; j++){
+		for (size_t j = 0; j < a.cols; j++) {
 			STUC_MAT_AT(a, i, j) = number;
 		}
 	}
@@ -300,9 +307,9 @@ void stuc_nnPrint(Stuc_nn nn, char* name) {
 	stuc_matPrint(STUC_NN_INPUT(nn), (char*)"input", 4);
 	for (size_t i = 1; i <= nn.layerCount; i++) {
 		char layerName[3][30] = {0};
-		snprintf(layerName[0], 30, "w%zu", i);
-		snprintf(layerName[1], 30, "b%zu", i);
-		snprintf(layerName[2], 30, "a%zu", i);
+		snprintf(layerName[0], sizeof (layerName[0]), "w%zu", i);
+		snprintf(layerName[1], sizeof (layerName[1]), "b%zu", i);
+		snprintf(layerName[2], sizeof (layerName[2]), "a%zu", i);
 		stuc_matPrint(STUC_NN_AT(nn, i).w, layerName[0], 4);
 		stuc_matPrint(STUC_NN_AT(nn, i).b, layerName[1], 4);
 		stuc_matPrint(STUC_NN_AT(nn, i).a, layerName[2], 4);
@@ -377,15 +384,30 @@ float_t stuc_nnCost(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput) {
 	return cost/samples;
 }
 
+Stuc_nn stuc_nnBackprop(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput, float_t boost) {
+	Stuc_nn gdMap = stuc_nnAlloc(nn.aktivacije, nn.arhitektura, nn.layerCount + 1);
+	stuc__nnBackprop(nn, gdMap, tInput, tOutput, boost);
+
+	return gdMap;
+}
+
+void stuc_nnBackpropNoAlloc(Stuc_nn nn, Stuc_nn gdMap, Stuc_mat tInput, Stuc_mat tOutput, float_t boost) {
+	stuc__nnBackprop(nn, gdMap, tInput, tOutput, boost);
+
+	return;
+}
+
 // Matematički izvor: 
 // https://github.com/tsoding/ml-notes/blob/master/papers/grad.pdf
-Stuc_nn stuc_nnBackprop(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput, float_t boost) {
+void stuc__nnBackprop(Stuc_nn nn, Stuc_nn gdMap, Stuc_mat tInput, Stuc_mat tOutput, float_t boost) {
 	STUC_ASSERT(tInput.rows == tOutput.rows);
 	STUC_ASSERT(tInput.cols == STUC_NN_INPUT(nn).cols);
 	STUC_ASSERT(tOutput.cols == STUC_NN_OUTPUT(nn).cols);
 
+	STUC_ASSERT(gdMap.layerCount == nn.layerCount);
+	STUC_SOFT_ASSERT(gdMap.arhitektura == nn.arhitektura);
+
 	size_t sampleCount = tInput.rows;
-	Stuc_nn gdMap = stuc_nnAlloc(nn.aktivacije, nn.arhitektura, nn.layerCount + 1);
 	stuc_nnFill(gdMap, 0.0);
 
 	for (size_t sample = 0; sample < sampleCount; sample++) {
@@ -435,15 +457,14 @@ Stuc_nn stuc_nnBackprop(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput, float_t b
 		}
 	}
 
-	return gdMap;
+	return;
 }
 
-Stuc_nn stuc_nnFiniteDiff(Stuc_nn nn, float_t eps, Stuc_mat tInput, Stuc_mat tOutput) {
+void stuc__nnFiniteDiff(Stuc_nn nn, Stuc_nn fd, float_t eps, Stuc_mat tInput, Stuc_mat tOutput) {
 	STUC_ASSERT(tInput.rows == tOutput.rows);
 	STUC_ASSERT(tInput.cols == STUC_NN_INPUT(nn).cols);
 	STUC_ASSERT(tOutput.cols == STUC_NN_OUTPUT(nn).cols);
 
-	Stuc_nn fd = stuc_nnAlloc(nn.aktivacije, nn.arhitektura, nn.layerCount + 1);
 	float_t originalCost = stuc_nnCost(nn, tInput, tOutput);
 
 	for (size_t layer = 1; layer <= nn.layerCount; layer++) {
@@ -472,8 +493,21 @@ Stuc_nn stuc_nnFiniteDiff(Stuc_nn nn, float_t eps, Stuc_mat tInput, Stuc_mat tOu
 		}
 	}
 
-	return fd;
+	return;
 
+}
+
+Stuc_nn stuc_nnFiniteDiff(Stuc_nn nn, float_t eps, Stuc_mat tInput, Stuc_mat tOutput) {
+	Stuc_nn fd = stuc_nnAlloc(nn.aktivacije, nn.arhitektura, nn.layerCount + 1);
+	stuc__nnFiniteDiff(nn, fd, eps, tInput, tOutput);
+
+	return fd;
+}
+
+void stuc_nnFiniteDiffNoAlloc(Stuc_nn nn, Stuc_nn fd, float_t eps, Stuc_mat tInput, Stuc_mat tOutput) {
+	stuc__nnFiniteDiff(nn, fd, eps, tInput, tOutput);
+
+	return;
 }
 
 void stuc_nnApplyDiff(Stuc_nn nn, Stuc_nn fd, float_t learningRate) {
