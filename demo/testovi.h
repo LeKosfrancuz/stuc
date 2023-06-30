@@ -95,9 +95,6 @@ int test_nnForward() {
 
 	Stuc_nn nn = {NULL, NULL, 1, layers};
 
-	stuc_matFill(a[0], 14);
-	// MAT_PRINT(a[0]);
-	// NN_PRINT(nn);
 	stuc_nnFill(nn, 14);
 	size_t inputs = STUC_NN_INPUT(nn).cols;
 	STUC_NN_AT(nn, 0).w.el[0] = 0;
@@ -198,6 +195,11 @@ int test_nnCost() {
 	float_t cost = stuc_nnCost(nn, tInput, tOutput);
 	float_t eps  = 1e-6; 
 	float_t expectedCost = 0.423917;
+
+	stuc_matFree(a[0]);
+	stuc_matFree(a[1]);
+	stuc_matFree(w1);
+	stuc_matFree(b1);
 
 	if (cost < expectedCost + eps && cost > expectedCost - eps) return true;
 	else return false;

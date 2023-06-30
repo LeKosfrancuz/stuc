@@ -68,7 +68,7 @@ int main() {
 
 	NN_PRINT(nn); 
 	printf("cost = %f\n", stuc_nnCost(nn, tInput, tOutput));
-
+	stuc_nnFree(nn);
 	return 0;
 }
 

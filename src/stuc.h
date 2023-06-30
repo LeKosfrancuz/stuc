@@ -68,7 +68,8 @@ Stuc_nn stuc_nnAlloc(Stuc_activationFunction* aktivacije, size_t* arhitektura, s
 void stuc_nnFree(Stuc_nn nn); 
 
 #ifndef STUC_MALLOC
-	#define STUC_MALLOC malloc
+	#define STUC_MALLOC malloc_set0
+	#define malloc_set0(n) calloc((n), 1); 
 	#include <stdlib.h>
 #endif // STUC_MALLOC
 
