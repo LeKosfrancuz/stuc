@@ -91,6 +91,8 @@ void stuc_nnFree(Stuc_nn nn);
 #ifndef NO_STDIO
 	#include <stdio.h>	
 #else 
+	#undef STUC_SOFT_ASSERT
+	#define STUC_SOFT_ASSERT STUC_ASSERT
 	#undef MAT_PRINT
 	#undef NN_PRINT
 #endif // NO_STDIO
