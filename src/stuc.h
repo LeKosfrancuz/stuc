@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <math.h>
 #include <stdbool.h>
+#include <string.h>
+#include <errno.h>
 
 #define STUC_LRELU_FACT 0.1
 
@@ -69,6 +71,8 @@ void stuc_nnApplyDiff(Stuc_nn nn, Stuc_nn fd, float_t learningRate);
 Stuc_nn stuc_nnAlloc(Stuc_activationFunction* aktivacije, size_t* arhitektura, size_t arhCount);
 void stuc_setActivation(Stuc_activationFunction* aktivacije, size_t aktCount, Stuc_activationFunction aktivacija);
 void stuc_nnFree(Stuc_nn nn); 
+int stuc_nnSaveToFile(Stuc_nn nn, const char* filePath);
+Stuc_nn stuc_nnLoadFromFile(const char* filePath);
 
 #ifndef STUC_MALLOC
 	#define STUC_MALLOC malloc_set0
@@ -103,6 +107,9 @@ void stuc_nnFree(Stuc_nn nn);
 
 
 #ifdef STUC_IMPLEMENTATION
+
+#define STUC_FILE_PREFIX "MKstucNN"
+
 void stuc__matActivate(Stuc_mat a, Stuc_activationFunction f);
 float_t stuc__activationDerivative(float_t x, Stuc_activationFunction f);
 void stuc__matAddSub(Stuc_mat a, Stuc_mat b, int addSub);
@@ -408,7 +415,7 @@ void stuc__nnBackprop(Stuc_nn nn, Stuc_nn gdMap, Stuc_mat tInput, Stuc_mat tOutp
 	STUC_ASSERT(tOutput.cols == STUC_NN_OUTPUT(nn).cols);
 
 	STUC_ASSERT(gdMap.layerCount == nn.layerCount);
-	STUC_SOFT_ASSERT(gdMap.arhitektura == nn.arhitektura);
+	// STUC_SOFT_ASSERT(gdMap.arhitektura == nn.arhitektura);
 
 	size_t sampleCount = tInput.rows;
 	stuc_nnFill(gdMap, 0.0);
@@ -542,13 +549,16 @@ void stuc_setActivation(Stuc_activationFunction* aktivacije, size_t aktCount, St
 Stuc_nn stuc_nnAlloc(Stuc_activationFunction* aktivacije, size_t* arhitektura, size_t arhCount) {
 	
 	Stuc_nn nn;
-	nn.arhitektura = arhitektura;
+	nn.arhitektura = (size_t*)STUC_MALLOC(sizeof(size_t) * arhCount);
 	nn.layerCount  = arhCount - 1; // nn.layerCount ne ukljucuje a[0];
 	nn.aktivacije = (Stuc_activationFunction*)STUC_MALLOC(sizeof (Stuc_activationFunction) * (arhCount - 1));
 	nn.layers = (Stuc_nnLayer*)STUC_MALLOC(sizeof (Stuc_nnLayer) * (arhCount));
 
 	for (size_t i = 0; i < arhCount - 1; i++)
 		nn.aktivacije[i] = aktivacije[i];
+
+	for (size_t i = 0; i < arhCount; i++)
+		nn.arhitektura[i] = arhitektura[i];
 
 	STUC_NN_INPUT(nn) = stuc_matAlloc(1, arhitektura[0]);
 	for (size_t layer = 1; layer <= nn.layerCount; layer++) {
@@ -571,8 +581,97 @@ void stuc_nnFree(Stuc_nn nn) {
 
 	STUC_FREE(nn.layers);
 	STUC_FREE(nn.aktivacije);
+	STUC_FREE(nn.arhitektura);
 
 	return;
 }
+
+#ifndef NO_STDIO
+int stuc_nnSaveToFile(Stuc_nn nn, const char* filePath) {
+	FILE *fp;
+	fp = fopen(filePath, "wb");
+	if (fp == NULL) {
+		fprintf(stderr, "\x1b[1;31mError\x1b[0;37m opening file \"%s\": %s\n", filePath, strerror(errno));
+		return -1;
+	}
+	
+	(void)STUC_SOFT_ASSERT(strlen(STUC_FILE_PREFIX) == 8);
+	fwrite(STUC_FILE_PREFIX, strlen(STUC_FILE_PREFIX), 1, fp);
+
+	(void)STUC_SOFT_ASSERT(sizeof(typeof(nn.layerCount)) == 8);
+	fwrite(&nn.layerCount, sizeof(typeof(nn.layerCount)), 1, fp);
+
+	STUC_ASSERT(sizeof(typeof(nn.arhitektura[0])) == sizeof(size_t));
+	fwrite(nn.arhitektura, sizeof(size_t) * (nn.layerCount + 1), 1, fp);
+
+	STUC_ASSERT(sizeof(typeof(nn.aktivacije[0])) == sizeof(Stuc_activationFunction));
+	fwrite(nn.aktivacije, sizeof(Stuc_activationFunction) * nn.layerCount, 1, fp);
+
+	for (size_t i = 1; i <= nn.layerCount; i++) {
+		STUC_ASSERT(STUC_NN_AT(nn, i).w.cols == STUC_NN_AT(nn, i).b.cols);
+
+		const size_t rows = STUC_NN_AT(nn, i).w.rows;
+		const size_t cols = STUC_NN_AT(nn, i).w.cols;
+
+		fwrite(&i, sizeof(i), 1, fp);
+		fwrite(&rows, sizeof(rows), 1, fp);
+		fwrite(&cols, sizeof(cols), 1, fp);
+		fwrite(STUC_NN_AT(nn, i).b.el, cols * sizeof(float_t), 1, fp);
+		fwrite(STUC_NN_AT(nn, i).w.el, cols * rows * sizeof(float_t), 1, fp);
+	
+	}
+
+	fclose(fp);
+
+	return 0;
+}
+
+Stuc_nn stuc_nnLoadFromFile(const char* filePath) {
+	Stuc_nn nn;
+
+	FILE *fp;
+	fp = fopen(filePath, "rb");
+	if (fp == NULL) {
+		fprintf(stderr, "\x1b[1;31mError\x1b[0;37m opening file \"%s\": %s\n", filePath, strerror(errno));
+		return nn; // TODO: Error handling
+	}
+	
+	STUC_ASSERT(strlen(STUC_FILE_PREFIX) == 8);
+	char buff[9] = {0};
+	fread(buff, strlen(STUC_FILE_PREFIX), 1, fp);
+	if (strcmp(buff, STUC_FILE_PREFIX)) return nn;
+
+	(void)STUC_SOFT_ASSERT(sizeof(typeof(nn.layerCount)) == 8);
+	fread(&nn.layerCount, sizeof(typeof(nn.layerCount)), 1, fp);
+
+	STUC_ASSERT(sizeof(typeof(nn.arhitektura[0])) == sizeof(size_t));
+	size_t* temp_arh = (size_t*)STUC_MALLOC(nn.layerCount + 1);
+	fread(temp_arh, sizeof(size_t) * (nn.layerCount + 1), 1, fp);
+
+	STUC_ASSERT(sizeof(typeof(nn.aktivacije[0])) == sizeof(Stuc_activationFunction));
+	Stuc_activationFunction* temp_act = (Stuc_activationFunction*)STUC_MALLOC(nn.layerCount);
+	fread(temp_act, sizeof(Stuc_activationFunction) * nn.layerCount, 1, fp);
+
+	nn = stuc_nnAlloc(temp_act, temp_arh, nn.layerCount + 1);
+	free(temp_act);
+	free(temp_arh);
+
+	for (size_t i = 1; i <= nn.layerCount; i++) {
+		size_t rows;
+		size_t cols;
+		size_t tempID;
+		fread(&tempID, sizeof(tempID), 1, fp);
+		fread(&rows, sizeof(rows), 1, fp);
+		fread(&cols, sizeof(cols), 1, fp);
+		fread(STUC_NN_AT(nn, i).b.el, cols * sizeof(float_t), 1, fp);
+		fread(STUC_NN_AT(nn, i).w.el, cols * rows * sizeof(float_t), 1, fp);
+	
+	}
+
+	fclose(fp);
+
+	return nn;
+}
+#endif // NO_STDIO
 
 #endif // STUC_IMPLEMENTATION

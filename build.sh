@@ -8,4 +8,5 @@ then
 fi
 
 gcc demo/xor.c -o Xor.out $CFlags $Debug && echo "Finished Building" || echo "Build Failed"
+gcc demo/loadAndFineTune.c -o FineTuning.out $CFlags $Debug && echo "Finished Building" || echo "Build Failed"
 
