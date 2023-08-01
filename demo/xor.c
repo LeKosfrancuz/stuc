@@ -17,17 +17,24 @@ int main() {
 
 	srand(time(0));
 	// srand(14);
-	Stuc_mat tInput = {4, 2, 3, tData};
-	Stuc_mat tOutput = {4, 1, 3, tData+2};
+	
+	size_t numberOfInputs  = 2;
+	size_t numberOfOutputs = 1;
+	size_t numberOfSamples = 4;
+
+	Stuc_mat tInput  = {numberOfSamples, numberOfInputs,  numberOfInputs + numberOfOutputs, tData};
+	Stuc_mat tOutput = {numberOfSamples, numberOfOutputs, numberOfInputs + numberOfOutputs, tData + tInput.cols};
 
 	size_t arch[] = {2, 2, 1};
-	Stuc_activationFunction funk[] = {STUC_ACTIVATE_SIGMOID, STUC_ACTIVATE_SIGMOID};
+	Stuc_activationFunction funk[STUC_LENP(arch)-1] = {STUC_ACTIVATE_SIGMOID, STUC_ACTIVATE_SIGMOID};
+	stuc_setActivation(funk, STUC_LENP(funk), STUC_ACTIVATE_RELU);
+
 	Stuc_nn nn = stuc_nnAlloc(funk, arch, STUC_LENP(arch));
 	Stuc_nn gdMap = stuc_nnAlloc(funk, arch, STUC_LENP(arch));
 
 	stuc_nnRand(nn, -1, 1);
 
-	size_t gen_count = 2*100*1000;
+	size_t gen_count = 2*1000*1000;
 	float_t learningRate = 1;
 	float_t boostMultiplier = 1;
 
@@ -36,7 +43,7 @@ int main() {
 		stuc_nnApplyDiff(nn, gdMap, learningRate);
 
 		if (i % (gen_count/10) == 0) {
-			printf("\rcost = %f                          \n", 
+			printf("\rcost = %.32f                          \n", 
 				stuc_nnCost(nn, tInput, tOutput));
 		} else if (i % (gen_count / 10000) == 1) {
 			printf("\rTraning Neural Network Model: %.2f%s\r",

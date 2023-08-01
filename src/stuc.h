@@ -67,6 +67,7 @@ Stuc_nn stuc_nnFiniteDiff(Stuc_nn nn, float_t eps, Stuc_mat tInput, Stuc_mat tOu
 void stuc_nnFiniteDiffNoAlloc(Stuc_nn nn, Stuc_nn fd, float_t eps, Stuc_mat tInput, Stuc_mat tOutput);
 void stuc_nnApplyDiff(Stuc_nn nn, Stuc_nn fd, float_t learningRate);
 Stuc_nn stuc_nnAlloc(Stuc_activationFunction* aktivacije, size_t* arhitektura, size_t arhCount);
+void stuc_setActivation(Stuc_activationFunction* aktivacije, size_t aktCount, Stuc_activationFunction aktivacija);
 void stuc_nnFree(Stuc_nn nn); 
 
 #ifndef STUC_MALLOC
@@ -295,7 +296,7 @@ void stuc_matPrint(Stuc_mat a, char* name, int indent) {
 	for (size_t i = 0; i < a.rows; i++) {
 		printf("\t%*s", (int)indent, "");
 		for (size_t j = 0; j < a.cols; j++) {
-			printf("%10.7f  ", STUC_MAT_AT(a, i, j));
+			printf("%10.9f  ", STUC_MAT_AT(a, i, j));
 		}
 		printf("\n");
 	}
@@ -525,6 +526,14 @@ void stuc_nnApplyDiff(Stuc_nn nn, Stuc_nn fd, float_t learningRate) {
 			STUC_MAT_AT(STUC_NN_AT(nn, layer).b, 0, i) -= learningRate*STUC_MAT_AT(STUC_NN_AT(fd, layer).b, 0, i);
 		}
 	
+	}
+
+	return;
+}
+
+void stuc_setActivation(Stuc_activationFunction* aktivacije, size_t aktCount, Stuc_activationFunction aktivacija) {
+	for (size_t i = 0; i < aktCount; i++) {
+		aktivacije[i] = aktivacija;
 	}
 
 	return;
