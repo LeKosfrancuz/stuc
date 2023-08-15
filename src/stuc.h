@@ -1,3 +1,11 @@
+// DEFINED ONLY FOR TESTING!!
+#ifdef STUC_IMPLEMENTATION
+#undef STUC_IMPLEMENTATION
+#else
+#define STUC_IMPLEMENTATION
+#endif //IMPL_IF
+
+
 #ifndef STUC_H
 #define STUC_H
 
@@ -6,6 +14,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <errno.h>
+#include <stdint.h>
 
 #define STUC_LRELU_FACT 0.1
 
@@ -71,8 +80,18 @@ void stuc_nnApplyDiff(Stuc_nn nn, Stuc_nn fd, float_t learningRate);
 Stuc_nn stuc_nnAlloc(Stuc_activationFunction* aktivacije, size_t* arhitektura, size_t arhCount);
 void stuc_setActivation(Stuc_activationFunction* aktivacije, size_t aktCount, Stuc_activationFunction aktivacija);
 void stuc_nnFree(Stuc_nn nn); 
-int stuc_nnSaveToFile(Stuc_nn nn, const char* filePath);
-Stuc_nn stuc_nnLoadFromFile(const char* filePath);
+uint8_t stuc_nnSaveToFile(Stuc_nn nn, const char* filePath);
+Stuc_nn stuc_nnLoadFromFile(const char* filePath, uint8_t* returnFlags);
+void stuc_printIOFlags(uint8_t flags);
+
+typedef enum {
+STUC_IOFLAG_FILE_ERROR      = 0x1 << 0,
+STUC_IOFLAG_TYPE_MISMATCH   = 0x1 << 1,
+STUC_IOFLAG_UNABLE_TO_READ  = 0x1 << 2,
+STUC_IOFLAG_UNABLE_TO_WRITE = 0x1 << 3,
+STUC_IOFLAG_WRONG_FILE_TYPE = 0x1 << 4,
+STUC_IOFLAG_COUNT = 5,
+} fileIOFlags;
 
 #ifndef STUC_MALLOC
 	#define STUC_MALLOC malloc_set0
@@ -116,7 +135,7 @@ void stuc__matAddSub(Stuc_mat a, Stuc_mat b, int addSub);
 void stuc__nnBackprop(Stuc_nn nn, Stuc_nn gdMap, Stuc_mat tInput, Stuc_mat tOutput, float_t boost);
 void stuc__nnFiniteDiff(Stuc_nn nn, Stuc_nn fd, float_t eps, Stuc_mat tInput, Stuc_mat tOutput);
 
-float_t stuc__randFloat() {
+float_t stuc__randFloat(void) {
 	return rand() / (float_t) RAND_MAX;
 }
 
@@ -587,28 +606,30 @@ void stuc_nnFree(Stuc_nn nn) {
 }
 
 #ifndef NO_STDIO
-int stuc_nnSaveToFile(Stuc_nn nn, const char* filePath) {
+uint8_t stuc_nnSaveToFile(Stuc_nn nn, const char* filePath) {
 	FILE *fp;
+	uint8_t returnFlags = 0;
+
 	fp = fopen(filePath, "wb");
 	if (fp == NULL) {
 		fprintf(stderr, "\x1b[1;31mError\x1b[0;37m opening file \"%s\": %s\n", filePath, strerror(errno));
-		return -1;
+		return returnFlags |= STUC_IOFLAG_UNABLE_TO_WRITE;
 	}
 	
-	(void)STUC_SOFT_ASSERT(strlen(STUC_FILE_PREFIX) == 8);
+	if (!STUC_SOFT_ASSERT(strlen(STUC_FILE_PREFIX) == 8)) returnFlags |= STUC_IOFLAG_TYPE_MISMATCH;
 	fwrite(STUC_FILE_PREFIX, strlen(STUC_FILE_PREFIX), 1, fp);
 
-	(void)STUC_SOFT_ASSERT(sizeof(typeof(nn.layerCount)) == 8);
+	if (!STUC_SOFT_ASSERT(sizeof(typeof(nn.layerCount)) == 8)) returnFlags |= STUC_IOFLAG_TYPE_MISMATCH;
 	fwrite(&nn.layerCount, sizeof(typeof(nn.layerCount)), 1, fp);
 
 	STUC_ASSERT(sizeof(typeof(nn.arhitektura[0])) == sizeof(size_t));
-	fwrite(nn.arhitektura, sizeof(size_t) * (nn.layerCount + 1), 1, fp);
+	fwrite(nn.arhitektura, sizeof(size_t), nn.layerCount + 1, fp);
 
 	STUC_ASSERT(sizeof(typeof(nn.aktivacije[0])) == sizeof(Stuc_activationFunction));
-	fwrite(nn.aktivacije, sizeof(Stuc_activationFunction) * nn.layerCount, 1, fp);
+	fwrite(nn.aktivacije, sizeof(Stuc_activationFunction), nn.layerCount, fp);
 
 	for (size_t i = 1; i <= nn.layerCount; i++) {
-		STUC_ASSERT(STUC_NN_AT(nn, i).w.cols == STUC_NN_AT(nn, i).b.cols);
+		STUC_ASSERT(STUC_NN_AT(nn, i).w.cols == STUC_NN_AT(nn, i).b.cols && "Neural network is corrupt!");
 
 		const size_t rows = STUC_NN_AT(nn, i).w.rows;
 		const size_t cols = STUC_NN_AT(nn, i).w.cols;
@@ -616,41 +637,55 @@ int stuc_nnSaveToFile(Stuc_nn nn, const char* filePath) {
 		fwrite(&i, sizeof(i), 1, fp);
 		fwrite(&rows, sizeof(rows), 1, fp);
 		fwrite(&cols, sizeof(cols), 1, fp);
-		fwrite(STUC_NN_AT(nn, i).b.el, cols * sizeof(float_t), 1, fp);
-		fwrite(STUC_NN_AT(nn, i).w.el, cols * rows * sizeof(float_t), 1, fp);
+		fwrite(STUC_NN_AT(nn, i).b.el, sizeof(float_t), cols, fp);
+		fwrite(STUC_NN_AT(nn, i).w.el, sizeof(float_t), cols * rows, fp);
 	
 	}
 
 	fclose(fp);
 
-	return 0;
+	return returnFlags;
 }
 
-Stuc_nn stuc_nnLoadFromFile(const char* filePath) {
+Stuc_nn stuc_nnLoadFromFile(const char* filePath, uint8_t* returnFlags) {
 	Stuc_nn nn;
 
 	FILE *fp;
+	*returnFlags = 0;
+
 	fp = fopen(filePath, "rb");
 	if (fp == NULL) {
 		fprintf(stderr, "\x1b[1;31mError\x1b[0;37m opening file \"%s\": %s\n", filePath, strerror(errno));
-		return nn; // TODO: Error handling
+		*returnFlags |= STUC_IOFLAG_UNABLE_TO_READ;
+		return nn;
 	}
 	
-	STUC_ASSERT(strlen(STUC_FILE_PREFIX) == 8);
+	if (!STUC_SOFT_ASSERT(strlen(STUC_FILE_PREFIX) == 8)) {
+		*returnFlags |= STUC_IOFLAG_TYPE_MISMATCH;
+		return nn;
+	}
+
 	char buff[9] = {0};
 	fread(buff, strlen(STUC_FILE_PREFIX), 1, fp);
-	if (strcmp(buff, STUC_FILE_PREFIX)) return nn;
+	if (strcmp(buff, STUC_FILE_PREFIX)) {
+		*returnFlags |= STUC_IOFLAG_WRONG_FILE_TYPE;
+		return nn;
+	}
 
-	(void)STUC_SOFT_ASSERT(sizeof(typeof(nn.layerCount)) == 8);
+	if (!STUC_SOFT_ASSERT(sizeof(typeof(nn.layerCount)) == 8)) {
+		*returnFlags |= STUC_IOFLAG_TYPE_MISMATCH;
+		return nn;
+	}
+
 	fread(&nn.layerCount, sizeof(typeof(nn.layerCount)), 1, fp);
 
 	STUC_ASSERT(sizeof(typeof(nn.arhitektura[0])) == sizeof(size_t));
 	size_t* temp_arh = (size_t*)STUC_MALLOC(nn.layerCount + 1);
-	fread(temp_arh, sizeof(size_t) * (nn.layerCount + 1), 1, fp);
+	fread(temp_arh, sizeof(size_t), nn.layerCount + 1, fp);
 
 	STUC_ASSERT(sizeof(typeof(nn.aktivacije[0])) == sizeof(Stuc_activationFunction));
 	Stuc_activationFunction* temp_act = (Stuc_activationFunction*)STUC_MALLOC(nn.layerCount);
-	fread(temp_act, sizeof(Stuc_activationFunction) * nn.layerCount, 1, fp);
+	fread(temp_act, sizeof(Stuc_activationFunction), nn.layerCount, fp);
 
 	nn = stuc_nnAlloc(temp_act, temp_arh, nn.layerCount + 1);
 	free(temp_act);
@@ -660,11 +695,17 @@ Stuc_nn stuc_nnLoadFromFile(const char* filePath) {
 		size_t rows;
 		size_t cols;
 		size_t tempID;
+
 		fread(&tempID, sizeof(tempID), 1, fp);
+		(void)STUC_SOFT_ASSERT(tempID == i);
+
 		fread(&rows, sizeof(rows), 1, fp);
 		fread(&cols, sizeof(cols), 1, fp);
-		fread(STUC_NN_AT(nn, i).b.el, cols * sizeof(float_t), 1, fp);
-		fread(STUC_NN_AT(nn, i).w.el, cols * rows * sizeof(float_t), 1, fp);
+		if (!STUC_SOFT_ASSERT(rows == STUC_NN_AT(nn, i).w.rows)) *returnFlags |= STUC_IOFLAG_FILE_ERROR;
+		if (!STUC_SOFT_ASSERT(cols == STUC_NN_AT(nn, i).w.cols)) *returnFlags |= STUC_IOFLAG_FILE_ERROR;
+
+		fread(STUC_NN_AT(nn, i).b.el, sizeof(float_t), cols , fp);
+		fread(STUC_NN_AT(nn, i).w.el, sizeof(float_t), cols * rows, fp);
 	
 	}
 
@@ -672,6 +713,21 @@ Stuc_nn stuc_nnLoadFromFile(const char* filePath) {
 
 	return nn;
 }
+
+void stuc_printIOFlags(uint8_t flags) {
+	for (size_t i = 0; i < STUC_IOFLAG_COUNT; i++)
+	switch (flags & (0x1 << i)) {
+		case STUC_IOFLAG_TYPE_MISMATCH: printf("Data type mismatch\n"); break;
+		case STUC_IOFLAG_WRONG_FILE_TYPE: printf("Wrong file type\n"); break;
+		case STUC_IOFLAG_UNABLE_TO_READ: printf("Unable to Read File\n"); break;
+		case STUC_IOFLAG_FILE_ERROR: printf("File is corupted or not right\n"); break;
+		case STUC_IOFLAG_UNABLE_TO_WRITE: printf("Unable to write to file\n"); break;
+		default: break;
+	}
+
+	return;
+}
+
 #endif // NO_STDIO
 
 #endif // STUC_IMPLEMENTATION

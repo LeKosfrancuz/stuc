@@ -12,7 +12,7 @@ float_t tData[] = {
 	1, 1, 0
 };
 
-int main() {
+int main(void) {
 	test_runAll(); 
 
 	srand(time(0));

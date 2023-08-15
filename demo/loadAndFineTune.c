@@ -1,5 +1,7 @@
+#include <stdint.h>
 #include <stdio.h>
 
+#include "../src/stuc.h"
 #define STUC_IMPLEMENTATION
 #include "../src/stuc.h"
 
@@ -10,8 +12,11 @@ float_t tData[] = {
 	1, 1, 2
 };
 
-int main() {
-	Stuc_nn nn = stuc_nnLoadFromFile("trainedNNs/Xor.snn");
+int main(void) {
+	uint8_t ret;
+	Stuc_nn nn = stuc_nnLoadFromFile("trainedNNs/Xor.snn", &ret);
+	stuc_printIOFlags(ret);
+	if (ret) return ret;
 
 	printf("\n XOR Verification:\n");
 	size_t inputs = STUC_NN_INPUT(nn).cols;

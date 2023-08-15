@@ -9,30 +9,31 @@
 #define PASS "\x1B[1;32mpass\x1B[0;37m"
 #define FAIL "\x1B[1;31mfail\x1B[0;37m"
 
-int test_nnForward();
-int test_matDot_Redosljed();
-int test_matDot_RazliciteVelicine();
-int test_nnCost();
-int test_activationDerivRELU_veceOdNula();
-int test_activationDerivRELU_manjeOdNula();
-int test_activationDerivRELU_jednakoNula();
-int test_activationDerivSIGMOID_minusJedan();
-int test_activationDerivSIGMOID_plusJedan();
-int test_activationDerivSIGMOID_jednaPolovina();
-int test_activationDerivTANH_dva();
-int test_activationDerivTANH_minusDva();
-int test_activationDerivTANH_cetiri();
-int test_activationDerivSIN_0();
-int test_activationDerivSIN_45();
-int test_activationDerivSIN_90();
-int test_activationDerivSIN_180();
-int test_matRow_tocnostKopiranja();
+int test_nnForward(void);
+int test_matDot_Redosljed(void);
+int test_matDot_RazliciteVelicine(void);
+int test_nnCost(void);
+int test_activationDerivRELU_veceOdNula(void);
+int test_activationDerivRELU_manjeOdNula(void);
+int test_activationDerivRELU_jednakoNula(void);
+int test_activationDerivSIGMOID_minusJedan(void);
+int test_activationDerivSIGMOID_plusJedan(void);
+int test_activationDerivSIGMOID_jednaPolovina(void);
+int test_activationDerivTANH_dva(void);
+int test_activationDerivTANH_minusDva(void);
+int test_activationDerivTANH_cetiri(void);
+int test_activationDerivSIN_0(void);
+int test_activationDerivSIN_45(void);
+int test_activationDerivSIN_90(void);
+int test_activationDerivSIN_180(void);
+int test_matRow_tocnostKopiranja(void);
+// TODO -> test spremanja u file
 
 #endif // TESTOVI_H
 
 #ifdef TESTOVI_IMPLEMENTATION
 
-void test_runAll() {
+void test_runAll(void) {
 	printf("Forward Test: %s\n", 
 		test_nnForward() ? PASS : FAIL);
 
@@ -86,7 +87,7 @@ void test_runAll() {
 }
 
 
-int test_nnForward() {
+int test_nnForward(void) {
 	Stuc_mat a[] = {stuc_matAlloc(1, 2), stuc_matAlloc(1, 1)};
 	Stuc_mat w1 = stuc_matAlloc(2, 1);
 	Stuc_mat b1 = stuc_matAlloc(1, 1);
@@ -128,7 +129,7 @@ int test_nnForward() {
 	return passed;
 }
 
-int test_matDot_RazliciteVelicine() {
+int test_matDot_RazliciteVelicine(void) {
 	float_t aDat[] = {1, 2, 3, 4, 5, 6};
 	float_t bDat[] = {16, -12, 5.125};
 
@@ -145,7 +146,7 @@ int test_matDot_RazliciteVelicine() {
 	return true;
 }
 
-int test_matDot_Redosljed() {
+int test_matDot_Redosljed(void) {
 	float_t aDat[] = {16, 2, 3.25, 4};
 	float_t bDat[] = {2, 2, -6.5, -1};
 
@@ -165,11 +166,11 @@ int test_matDot_Redosljed() {
 
 	return true;
 }
-int test_matAdd_1() {
+int test_matAdd_1(void) {
 	return 1;
 }
 
-int test_nnCost() {
+int test_nnCost(void) {
 	float_t tData[] = {
 		0, 0, 0,
 		0, 1, 1,
@@ -207,69 +208,69 @@ int test_nnCost() {
 
 extern float_t stuc__activationDerivative(float_t x, Stuc_activationFunction f);
 
-int test_activationDerivRELU_veceOdNula() {
+int test_activationDerivRELU_veceOdNula(void) {
 	float_t ret = stuc__activationDerivative(10*1000, STUC_ACTIVATE_RELU);
 	if (ret == 1.0) return true;
 
 	return false;
 }
 
-int test_activationDerivRELU_manjeOdNula() {
+int test_activationDerivRELU_manjeOdNula(void) {
 	float_t ret = stuc__activationDerivative(-10*1000, STUC_ACTIVATE_RELU);
 	if (ret == (float_t)STUC_LRELU_FACT) return true;
 
 	return false;
 }
 
-int test_activationDerivRELU_jednakoNula() {
+int test_activationDerivRELU_jednakoNula(void) {
 	float_t ret = stuc__activationDerivative(0, STUC_ACTIVATE_RELU);
 	if (ret == (float_t)STUC_LRELU_FACT) return true;
 
 	return false;
 }
 
-int test_activationDerivSIGMOID_minusJedan() {
+int test_activationDerivSIGMOID_minusJedan(void) {
 	float_t ret = stuc__activationDerivative(-1, STUC_ACTIVATE_SIGMOID);
 	if (ret == -2.0) return true;
 
 	return false;
 }
 
-int test_activationDerivSIGMOID_plusJedan() {
+int test_activationDerivSIGMOID_plusJedan(void) {
 	float_t ret = stuc__activationDerivative(1, STUC_ACTIVATE_SIGMOID);
 	if (ret == 0.0) return true;
 
 	return false;
 }
 
-int test_activationDerivSIGMOID_jednaPolovina() {
+int test_activationDerivSIGMOID_jednaPolovina(void) {
 	float_t ret = stuc__activationDerivative(0.5, STUC_ACTIVATE_SIGMOID);
 	if (ret == 0.25) return true;
 
 	return false;
 }
 
-int test_activationDerivTANH_dva() {
+int test_activationDerivTANH_dva(void) {
 	float_t ret = stuc__activationDerivative(2, STUC_ACTIVATE_TANH);
 	if (ret == -3) return true;
 
 	return false;
 }
 
-int test_activationDerivTANH_minusDva() {
+int test_activationDerivTANH_minusDva(void) {
 	float_t ret = stuc__activationDerivative(-2, STUC_ACTIVATE_TANH);
 	if (ret == -3) return true;
 
 	return false;
 }
-int test_activationDerivTANH_cetiri() {
+int test_activationDerivTANH_cetiri(void) {
 	float_t ret = stuc__activationDerivative(4, STUC_ACTIVATE_TANH);
 	if (ret == -15) return true;
 
 	return false;
 }
 
-int test_activationDerivSIN_0() {
+int test_activationDerivSIN_0(void) {
 	float_t sin0 = sin(0);
 	float_t ret = stuc__activationDerivative(sin0, STUC_ACTIVATE_SIN);
 	if (ret == (float_t)cos(0)) return true;
@@ -278,7 +279,7 @@ int test_activationDerivSIN_0() {
 	return false;
 }
 
-int test_activationDerivSIN_45() {
+int test_activationDerivSIN_45(void) {
 	float_t sin45 = sin(PI/4);
 	float_t ret = stuc__activationDerivative(sin45, STUC_ACTIVATE_SIN);
 	if (ret == (float_t)cos(PI/4)) return true;
@@ -287,7 +288,7 @@ int test_activationDerivSIN_45() {
 	return false;
 }
 
-int test_activationDerivSIN_90() {
+int test_activationDerivSIN_90(void) {
 	float_t sin90 = sin(PI/2);
 	float_t ret = stuc__activationDerivative(sin90, STUC_ACTIVATE_SIN);
 	if (ret == (float_t)cos(PI/2)) return true;
@@ -296,7 +297,7 @@ int test_activationDerivSIN_90() {
 	return false;
 }
 
-int test_activationDerivSIN_180() {
+int test_activationDerivSIN_180(void) {
 	float_t sin180 = sin(PI);
 	float_t ret = stuc__activationDerivative(sin180, STUC_ACTIVATE_SIN);
 	if (ret == (float_t)cos(PI)) return true;
@@ -305,7 +306,7 @@ int test_activationDerivSIN_180() {
 	return false;
 }
 
-int test_matRow_tocnostKopiranja() {
+int test_matRow_tocnostKopiranja(void) {
 	float_t tData[] = {
 		1, 2, 0,
 		3, 4, 1,
