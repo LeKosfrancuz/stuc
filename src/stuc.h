@@ -1,11 +1,3 @@
-// DEFINED ONLY FOR TESTING!!
-#ifdef STUC_IMPLEMENTATION
-#undef STUC_IMPLEMENTATION
-#else
-#define STUC_IMPLEMENTATION
-#endif //IMPL_IF
-
-
 #ifndef STUC_H
 #define STUC_H
 
@@ -647,6 +639,16 @@ uint8_t stuc_nnSaveToFile(Stuc_nn nn, const char* filePath) {
 	return returnFlags;
 }
 
+void s_fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+	size_t ret = fread(ptr, size, nmemb, stream);
+        if (ret != nmemb) {
+            fprintf(stderr, "\x1b[1;31mError\x1b[0;37m reading from file: %s\n", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+
+	return;
+}
+
 Stuc_nn stuc_nnLoadFromFile(const char* filePath, uint8_t* returnFlags) {
 	Stuc_nn nn;
 
@@ -666,7 +668,8 @@ Stuc_nn stuc_nnLoadFromFile(const char* filePath, uint8_t* returnFlags) {
 	}
 
 	char buff[9] = {0};
-	fread(buff, strlen(STUC_FILE_PREFIX), 1, fp);
+	s_fread(buff, strlen(STUC_FILE_PREFIX), 1, fp);
+
 	if (strcmp(buff, STUC_FILE_PREFIX)) {
 		*returnFlags |= STUC_IOFLAG_WRONG_FILE_TYPE;
 		return nn;
@@ -677,15 +680,15 @@ Stuc_nn stuc_nnLoadFromFile(const char* filePath, uint8_t* returnFlags) {
 		return nn;
 	}
 
-	fread(&nn.layerCount, sizeof(typeof(nn.layerCount)), 1, fp);
+	s_fread(&nn.layerCount, sizeof(typeof(nn.layerCount)), 1, fp);
 
 	STUC_ASSERT(sizeof(typeof(nn.arhitektura[0])) == sizeof(size_t));
 	size_t* temp_arh = (size_t*)STUC_MALLOC(nn.layerCount + 1);
-	fread(temp_arh, sizeof(size_t), nn.layerCount + 1, fp);
+	s_fread(temp_arh, sizeof(size_t), nn.layerCount + 1, fp);
 
 	STUC_ASSERT(sizeof(typeof(nn.aktivacije[0])) == sizeof(Stuc_activationFunction));
 	Stuc_activationFunction* temp_act = (Stuc_activationFunction*)STUC_MALLOC(nn.layerCount);
-	fread(temp_act, sizeof(Stuc_activationFunction), nn.layerCount, fp);
+	s_fread(temp_act, sizeof(Stuc_activationFunction), nn.layerCount, fp);
 
 	nn = stuc_nnAlloc(temp_act, temp_arh, nn.layerCount + 1);
 	free(temp_act);
@@ -696,16 +699,16 @@ Stuc_nn stuc_nnLoadFromFile(const char* filePath, uint8_t* returnFlags) {
 		size_t cols;
 		size_t tempID;
 
-		fread(&tempID, sizeof(tempID), 1, fp);
+		s_fread(&tempID, sizeof(tempID), 1, fp);
 		(void)STUC_SOFT_ASSERT(tempID == i);
 
-		fread(&rows, sizeof(rows), 1, fp);
-		fread(&cols, sizeof(cols), 1, fp);
+		s_fread(&rows, sizeof(rows), 1, fp);
+		s_fread(&cols, sizeof(cols), 1, fp);
 		if (!STUC_SOFT_ASSERT(rows == STUC_NN_AT(nn, i).w.rows)) *returnFlags |= STUC_IOFLAG_FILE_ERROR;
 		if (!STUC_SOFT_ASSERT(cols == STUC_NN_AT(nn, i).w.cols)) *returnFlags |= STUC_IOFLAG_FILE_ERROR;
 
-		fread(STUC_NN_AT(nn, i).b.el, sizeof(float_t), cols , fp);
-		fread(STUC_NN_AT(nn, i).w.el, sizeof(float_t), cols * rows, fp);
+		s_fread(STUC_NN_AT(nn, i).b.el, sizeof(float_t), cols , fp);
+		s_fread(STUC_NN_AT(nn, i).w.el, sizeof(float_t), cols * rows, fp);
 	
 	}
 
