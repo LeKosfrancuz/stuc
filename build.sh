@@ -1,5 +1,5 @@
 #!/bin/bash
-CFlags=" -O3 -Wall -Wextra -pedantic -Wstrict-prototypes -Wold-style-definition -lm "
+CFlags=" -O3 -Wall -Wextra -pedantic -Wstrict-prototypes -Wold-style-definition -lm -std=c99"
 Raylib="-lraylib"
 Debug=""
 argc=$#

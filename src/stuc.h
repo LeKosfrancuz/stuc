@@ -17,6 +17,7 @@
 #define STUC_NN_OUTPUT(nn) STUC_NN_AT((nn), (nn).layerCount).a
 #define STUC_NN_INPUT(nn) STUC_NN_AT((nn), 0).a
 #define STUC_LENP(p) sizeof (p) / sizeof ((p)[0])
+#define typeof(x) __typeof__(x)
 
 typedef struct {
 	size_t rows;

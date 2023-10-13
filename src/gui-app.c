@@ -3,9 +3,6 @@
 #include <string.h>
 #define RAYGUI_IMPLEMENTATION
 #include "external/raygui.h"
-#define GUI_STUC_IMPLEMENTATION
-#include "external/gui_Stuc.h"
-
 
 // raygui embedded styles
 #include "./external/styles/style_cyber.h"       // raygui style: cyber
