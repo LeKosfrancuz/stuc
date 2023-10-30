@@ -2290,9 +2290,9 @@ int GuiComboBox(Rectangle bounds, const char *text, int *active)
             {
                 *active += 1;
                 if (*active >= itemCount) *active = 0;      // Cyclic combobox
-            }
+            } 
 
-            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) state = STATE_PRESSED;
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) || IsMouseButtonDown(MOUSE_RIGHT_BUTTON)) state = STATE_PRESSED;
             else state = STATE_FOCUSED;
         }
     }
