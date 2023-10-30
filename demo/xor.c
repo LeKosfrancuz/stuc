@@ -1,7 +1,6 @@
 #define TESTOVI_IMPLEMENTATION
 #include "testovi.h"
-#define STUC_IMPLEMENTATION
-#include "../src/stuc.h"
+#include "../src/stuc/stuc.h"
 #include <stdio.h>
 #include <time.h>
 

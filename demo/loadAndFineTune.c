@@ -1,9 +1,9 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "../src/stuc.h"
-#define STUC_IMPLEMENTATION
-#include "../src/stuc.h"
+#include "../src/stuc/stuc.h"
+// #define STUC_IMPLEMENTATION
+// #include "../src/stuc.h"
 
 float_t tData[] = {
 	0, 0, 0,
@@ -13,8 +13,8 @@ float_t tData[] = {
 };
 
 int main(void) {
-	uint8_t ret;
-	Stuc_nn nn = stuc_nnLoadFromFile("trainedNNs/Xor.snn", &ret);
+	Stuc_nn nn;
+	uint8_t ret = stuc_nnLoadFromFile(&nn, "trainedNNs/Xor.snn");
 	stuc_printIOFlags(ret);
 	if (ret) return ret;
 

@@ -1,7 +1,7 @@
 #ifndef TESTOVI_H
 #define TESTOVI_H
 
-#include "../src/stuc.h"
+#include "../src/stuc/stuc.h"
 #include <stdio.h>
 #include <time.h>
 
