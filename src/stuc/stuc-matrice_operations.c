@@ -57,7 +57,7 @@ Stuc_mat stuc_matAlloc(size_t rows, size_t cols) {
 	a.cols = cols;
 
 	STUC_ASSERT(rows * cols > 0);
-	a.el = (float_t*)STUC_MALLOC(rows * cols * sizeof *a.el);
+	a.el = (float_t *)STUC_MALLOC(rows * cols * sizeof *a.el);
 
 	return a;
 }
@@ -159,7 +159,7 @@ Stuc_mat stuc_matRow(Stuc_mat a, size_t row) {
 }
 
 #ifndef NO_STDIO
-void stuc_matPrint(Stuc_mat a, char* name, int indent) {
+void stuc_matPrint(Stuc_mat a, char *name, int indent) {
 	printf("%*s%s = [\n", (int)indent, "", name);
 
 	for (size_t i = 0; i < a.rows; i++) {

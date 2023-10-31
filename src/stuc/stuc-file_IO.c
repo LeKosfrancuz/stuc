@@ -5,7 +5,7 @@
 #define typeof(x) __typeof__(x)
 #define STUC_FILE_PREFIX "MKstucNN"
 
-uint8_t stuc_nnSaveToFile(Stuc_nn nn, const char* filePath) {
+uint8_t stuc_nnSaveToFile(Stuc_nn nn, const char *filePath) {
 	FILE *fp;
 	uint8_t returnFlags = 0;
 
@@ -56,7 +56,7 @@ void s_fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
 	return;
 }
 
-uint8_t stuc_nnLoadFromFile(Stuc_nn *nn, const char* filePath) {
+uint8_t stuc_nnLoadFromFile(Stuc_nn *nn, const char *filePath) {
 	FILE *fp;
 	uint8_t returnFlags = 0;
 
@@ -84,11 +84,11 @@ uint8_t stuc_nnLoadFromFile(Stuc_nn *nn, const char* filePath) {
 	s_fread(&nn->layerCount, sizeof(typeof(nn->layerCount)), 1, fp);
 
 	STUC_ASSERT(sizeof(typeof(nn->arhitektura[0])) == sizeof(size_t));
-	size_t* temp_arh = (size_t*)STUC_MALLOC(nn->layerCount + 1);
+	size_t *temp_arh = (size_t *)STUC_MALLOC(nn->layerCount + 1);
 	s_fread(temp_arh, sizeof(size_t), nn->layerCount + 1, fp);
 
 	STUC_ASSERT(sizeof(typeof(nn->aktivacije[0])) == sizeof(Stuc_activationFunction));
-	Stuc_activationFunction* temp_act = (Stuc_activationFunction*)STUC_MALLOC(nn->layerCount);
+	Stuc_activationFunction *temp_act = (Stuc_activationFunction *)STUC_MALLOC(nn->layerCount);
 	s_fread(temp_act, sizeof(Stuc_activationFunction), nn->layerCount, fp);
 
 	*nn = stuc_nnAlloc(temp_act, temp_arh, nn->layerCount + 1);
