@@ -1,5 +1,3 @@
-#define TESTOVI_IMPLEMENTATION
-#include "testovi.h"
 #include "../src/stuc/stuc.h"
 #include <stdio.h>
 #include <time.h>
@@ -12,7 +10,6 @@ float_t tData[] = {
 };
 
 int main(void) {
-	test_runAll(); 
 
 	srand(time(0));
 	// srand(14);

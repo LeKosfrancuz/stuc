@@ -48,3 +48,5 @@ testovi/*
 run.sh
 allPlatform-build/*
 builds/*
+tests/Testing/Temporary/*
+tests/build/*
