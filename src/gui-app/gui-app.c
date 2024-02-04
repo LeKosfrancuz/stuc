@@ -17,16 +17,38 @@
 #include "./external/styles/style_cherry.h"      // raygui style: cherry
 #include "./external/styles/style_candy.h"       // raygui style: candy
 
+#define INFO  "[INFO]: "
+#define WARN  "[WARNING]: "
+#define ERROR "[ERROR]: "
+#define log(level, ...)           printf(level); printf(__VA_ARGS__);
+
 #define VISUAL_STYLES_COUNT 12
 #define ICON_TO_TEXT(icon) TextFormat("#%03i#", (icon) & (0x1ff))
 
-#define SC_ACCENT_MID_T GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_PRESSED))
-#define SC_ACCENT_LOW_B GetColor(GuiGetStyle(DEFAULT, BASE_COLOR_PRESSED))
+#define SC_NORML_BASE GetColor(GuiGetStyle(DEFAULT, BASE_COLOR_NORMAL))
+#define SC_FOCUS_BASE GetColor(GuiGetStyle(DEFAULT, BASE_COLOR_FOCUSED))
+#define SC_PRESS_BASE GetColor(GuiGetStyle(DEFAULT, BASE_COLOR_PRESSED))
 
-#define SC_PRIMARY_MID_T   GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL))
-#define SC_SECUNDARY_MID_T GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_FOCUSED))
+#define SC_NORML_BORDER GetColor(GuiGetStyle(DEFAULT, BORDER_COLOR_NORMAL))
+#define SC_FOCUS_BORDER GetColor(GuiGetStyle(DEFAULT, BORDER_COLOR_FOCUSED))
+#define SC_PRESS_BORDER GetColor(GuiGetStyle(DEFAULT, BORDER_COLOR_PRESSED))
+
+#define SC_NORML_TEXT   GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL))
+#define SC_FOCUS_TEXT   GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_FOCUSED))
+#define SC_PRESS_TEXT   GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_PRESSED))
 
 #define SC_BACKGROUND GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR))
+
+typedef struct {
+	size_t nOfNeurons;
+	int activation;
+} Gui_nnLayer;
+
+typedef struct {
+	Gui_nnLayer *items;
+	size_t count;
+	size_t capacity;
+} Gui_nnLayers;
 
 typedef struct {
 	Rectangle boundingBox;
@@ -178,23 +200,6 @@ int main(void) {
 				ICON_TO_TEXT(ICON_FILETYPE_IMAGE)), 
 			&nacinProvjereRezultataActive);
 
-
-
-    // BORDER_COLOR_NORMAL = 0,    // Control border color in STATE_NORMAL
-    // BASE_COLOR_NORMAL,          // Control base color in STATE_NORMAL
-    // TEXT_COLOR_NORMAL,          // Control text color in STATE_NORMAL
-    // BORDER_COLOR_FOCUSED,       // Control border color in STATE_FOCUSED
-    // BASE_COLOR_FOCUSED,         // Control base color in STATE_FOCUSED
-    // TEXT_COLOR_FOCUSED,         // Control text color in STATE_FOCUSED
-    // BORDER_COLOR_PRESSED,       // Control border color in STATE_PRESSED
-    // BASE_COLOR_PRESSED,         // Control base color in STATE_PRESSED
-    // TEXT_COLOR_PRESSED,         // Control text color in STATE_PRESSED
-    // BORDER_COLOR_DISABLED,      // Control border color in STATE_DISABLED
-    // BASE_COLOR_DISABLED,        // Control base color in STATE_DISABLED
-    // TEXT_COLOR_DISABLED,        // Control text color in STATE_DISABLED
-		#define SC_ACCENT_HIG_O GetColor(GuiGetStyle(DEFAULT, BORDER_COLOR_PRESSED))
-		// TODO: Indeksiranje boja
-
 		EndDrawing();
 	}
 
@@ -292,7 +297,7 @@ void drawCostFunctionPanelGroup(CostFunctionPanelGroup* cfpg) {
 		Rectangle buttonPosition = cfpg->expandButtonRec;
 		float textSize = GuiGetStyle(DEFAULT, TEXT_SIZE);
 		Vector2 textMeasure = MeasureTextEx(GuiGetFont(), cfpg->costExpandButtonText, textSize, 1);
-		Color textColor = SC_PRIMARY_MID_T;
+		Color textColor = SC_NORML_TEXT;
 
 		Vector2   textPosition   = {
 				  buttonPosition.width - (buttonPosition.width - textMeasure.y) / 2, 
@@ -303,9 +308,9 @@ void drawCostFunctionPanelGroup(CostFunctionPanelGroup* cfpg) {
 		cfpg->isShown = GuiButton(buttonPosition, NULL );
 
 		if (CheckCollisionPointRec(GetMousePosition(), buttonPosition)) {
-			textColor = SC_SECUNDARY_MID_T;
+			textColor = SC_FOCUS_TEXT;
 			if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-				textColor = SC_ACCENT_MID_T;
+				textColor = SC_PRESS_TEXT;
 		}
 
 		DrawTextPro(GuiGetFont(), cfpg->costExpandButtonText, textPosition, rotationPoint, 90, textSize, 1, textColor);
