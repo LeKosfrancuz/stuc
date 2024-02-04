@@ -3,6 +3,7 @@
 #include <string.h>
 #define RAYGUI_IMPLEMENTATION
 #include "external/raygui.h"
+#include "dynamic-arrays.h"
 
 // raygui embedded styles
 #include "./external/styles/style_cyber.h"       // raygui style: cyber
@@ -61,10 +62,13 @@ typedef struct {
 
 	bool  nOfNeuronsEditMode;             // Spinner: 	nOfNeurons
 	int   layerChoiceCurrent;             // ToggleGroup: 	layerChoice
+	int layerSelectedCurrent;	      // current layer actualy shown
 	int   layerChoiceCount;               // ToggleGroup: 	layerChoice
 	int   activationFunctionChoiceCurrent;// ComboBox: 	activationChoice
 	int   nOfNeuronsValue;                // Spinner: 	nOfNeurons
 	float learnRateValue;                 // SliderBar: 	learnRate
+	
+	Gui_nnLayers layers;
 
 	const char *controlPanelText;                // GROUPBOX:    controlPanel
 	const char *layerChoiceText;                 // TOGGLEGROUP: layerChoice
@@ -85,6 +89,14 @@ typedef struct {
 	const char* costExpandButtonText;     // BUTTON:      expandButton
 } CostFunctionPanelGroup;
 
+typedef struct {
+	Rectangle boundingBox;
+
+	Stuc_nn nn;
+
+	const char *dummyRecText;
+} NeuralNetworkPreview;
+
 void changeVisualStyle(int* prevStyle, const int crntStyle);
 
 ControlPanelGroup initControlPanelGroup(void);
@@ -94,6 +106,10 @@ void drawControlPanelGroup(ControlPanelGroup* cpg);
 CostFunctionPanelGroup initCostFunctionPanelGroup(void);
 void updateCostFunctionPanelGroup(CostFunctionPanelGroup* cfpg, size_t topPad, size_t expandButtonWidth);
 void drawCostFunctionPanelGroup(CostFunctionPanelGroup* cfpg);
+
+NeuralNetworkPreview initNeuralNetworkPreview(void);
+void updateNeuralNetworkPreview(NeuralNetworkPreview* nnp);
+void drawNeuralNetworkPreview(NeuralNetworkPreview* nnp, ControlPanelGroup* cpg);
 
 
 size_t g_screenWidth = 800;
@@ -130,11 +146,11 @@ int main(void) {
 
 	// Const text
 	const char* styleChooserText 		    = "default;Jungle;Lavanda;Dark;Ashes;Bluish;Cyber;Terminal;Enefete;Sunny;Cherry;Candy"; // STYLE CHOOSER
-	const char *neuralNetworkText               = "Prikaz Neuronske mreze";     // DUMMYREC:    neuralNetwork
 	const char *provjeraRezultataText           = "Provjera rezultata";         // GROUPBOX:    provjeraRezultata
 
 	ControlPanelGroup controlPanelGroup   = initControlPanelGroup();
 	CostFunctionPanelGroup costPanelGroup = initCostFunctionPanelGroup();
+	NeuralNetworkPreview neuralNetworkPreview = initNeuralNetworkPreview();
 
 	while (!WindowShouldClose()) {
 		g_screenHeight = (size_t) GetScreenHeight();
@@ -154,9 +170,9 @@ int main(void) {
 			aY.s1 += controlPanelGroup.boundingBox.height + innerLayerPad;
 		}
 
-		Rectangle neuralNetworkRec = { aX.l2, aY.s1, 0.55 * g_screenWidth, g_screenHeight - (aY.s1 + bottomPad) }; //DummyRec: neuralNetwork
-		aY.s1 += neuralNetworkRec.height + innerLayerPad;
-		aX.l2 += neuralNetworkRec.width + layerPad;
+		neuralNetworkPreview.boundingBox = (Rectangle) { aX.l2, aY.s1, 0.55 * g_screenWidth, g_screenHeight - (aY.s1 + bottomPad) }; //DummyRec: neuralNetwork
+		aY.s1 += neuralNetworkPreview.boundingBox.height + innerLayerPad;
+		aX.l2 += neuralNetworkPreview.boundingBox.width + layerPad;
 		
 		{
 			size_t width = g_screenWidth - (aX.l1 + rightPad);
@@ -168,8 +184,9 @@ int main(void) {
 		Rectangle testResultRec = { aX.l2, aY.s2, g_screenWidth - (aX.l2 + rightPad), g_screenHeight - (aY.s2 + bottomPad) }; //GroupBox: provjeraRezultata
 
 
-		updateCostFunctionPanelGroup(&costPanelGroup, topPad, innerLayerPad);
 		updateControlPanelGroup(&controlPanelGroup, layerPad);
+		updateCostFunctionPanelGroup(&costPanelGroup, topPad, innerLayerPad);
+		updateNeuralNetworkPreview(&neuralNetworkPreview);
 		Rectangle testResultTypeRec;
 		{
 			size_t sX = testResultRec.x + 2*layerPad;
@@ -177,6 +194,19 @@ int main(void) {
 			testResultTypeRec = (Rectangle) { sX, sY,  72,  24 }; // ToggleGroup: nacinProvjereRezultata
 		}
 
+		if (IsKeyPressed(KEY_L)) {
+			log(INFO, "Layer count is: %zu\n", controlPanelGroup.layers.count);
+			size_t layerCount = controlPanelGroup.layers.count;
+			size_t neuronSize = 10;
+			// size_t nBottmPad = 3 * neuronSize;
+			size_t nRightPad = 4 * neuronSize;
+			float nnPreviewWidth = (layerCount+1)*neuronSize + (layerCount-1)*(nRightPad);
+			NeuralNetworkPreview* nnp = &neuralNetworkPreview;
+			size_t dx = /*nnp->boundingBox.x +*/ nnp->boundingBox.width/2 - nnPreviewWidth/2;
+
+			log(INFO, "bounding box; width: %.0f, height: %.0f\n", nnp->boundingBox.width, nnp->boundingBox.height);
+			log(INFO, "nnPreview; width: %.0f, dx: %zu\n", nnPreviewWidth, dx);
+		}
 
 		BeginDrawing();
 		ClearBackground(SC_BACKGROUND);
@@ -189,7 +219,7 @@ int main(void) {
 		}
 
 		// Draw controls
-		GuiDummyRec(neuralNetworkRec,  neuralNetworkText);
+		drawNeuralNetworkPreview(&neuralNetworkPreview, &controlPanelGroup);
 		drawCostFunctionPanelGroup(&costPanelGroup);
 		GuiGroupBox(testResultRec,  provjeraRezultataText);
 		drawControlPanelGroup(&controlPanelGroup);
@@ -224,6 +254,7 @@ ControlPanelGroup initControlPanelGroup(void) {
 	cpg.nOfNeuronsEditMode              = false;        // Spinner:     nOfNeurons
 	cpg.nOfNeuronsValue                 = 0;            // Spinner:     nOfNeurons
 	cpg.learnRateValue                  = 0.0f;         // SliderBar:   learnRate
+	
 	return cpg;
 }
 
@@ -247,6 +278,20 @@ void updateControlPanelGroup(ControlPanelGroup* cpg, size_t layerPad) {
 
 	if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && CheckCollisionPointRec(GetMousePosition(), cpg->activationChoiceCB)) {
 		cpg->activationFunctionChoiceCurrent = ((cpg->activationFunctionChoiceCurrent + STUC_ACTIVATIONS_COUNT) - 1) % STUC_ACTIVATIONS_COUNT;
+	}
+
+	if (cpg->layers.count < (size_t)cpg->layerChoiceCurrent + 1) {
+		da_append(&cpg->layers, (Gui_nnLayer){0});
+		log(INFO, "Dodan layer %zu!\n", cpg->layers.count);
+	} else {
+		if (cpg->layerChoiceCurrent == cpg->layerSelectedCurrent) {
+			cpg->layers.items[cpg->layerChoiceCurrent].nOfNeurons = cpg->nOfNeuronsValue;
+			cpg->layers.items[cpg->layerChoiceCurrent].activation = cpg->activationFunctionChoiceCurrent;
+		} else {
+			cpg->layerSelectedCurrent = cpg->layerChoiceCurrent;
+			cpg->nOfNeuronsValue = cpg->layers.items[cpg->layerChoiceCurrent].nOfNeurons;
+			cpg->activationFunctionChoiceCurrent = cpg->layers.items[cpg->layerChoiceCurrent].activation;
+		}
 	}
 		
 	return;
@@ -318,6 +363,72 @@ void drawCostFunctionPanelGroup(CostFunctionPanelGroup* cfpg) {
 }
 void updateCostFunctionPanelGroup(CostFunctionPanelGroup* cfpg, size_t topPad, size_t expandButtonWidth) {
 	cfpg->expandButtonRec = (Rectangle) { 0, topPad, expandButtonWidth, 0.1 * g_screenHeight };
+}
+
+NeuralNetworkPreview initNeuralNetworkPreview(void) {
+	NeuralNetworkPreview nnp = {
+		.dummyRecText = "Prikaz Neuronske mreze"     // DUMMYREC:    neuralNetwork
+	};
+	return nnp;
+}
+
+void updateNeuralNetworkPreview(NeuralNetworkPreview* nnp) {
+	nnp->boundingBox.width = 0.55 * g_screenWidth;
+	return;
+}
+void drawNeuralNetworkPreview(NeuralNetworkPreview* nnp, ControlPanelGroup* cpg) {
+	GuiDummyRec(nnp->boundingBox,  nnp->dummyRecText);
+
+	size_t layerCount = cpg->layers.count;
+	size_t neuronSize = 10;
+	size_t nBottmPad = 3 * neuronSize;
+	size_t nRightPad = 4 * neuronSize;
+	float neuronMapInnerWidth = neuronSize*(layerCount - 1) + nRightPad*(layerCount - 1);
+	/*
+	 * This is the width of the neuron map calculated from the circle centers instead of 
+	 * boxes arround them. The real width is this width + 2*neuronSize
+	 */
+	size_t dx = nnp->boundingBox.x + nnp->boundingBox.width/2 - (neuronMapInnerWidth)/2;
+
+	if ((layerCount > 0 && cpg->layers.items[0].nOfNeurons >= 1) || layerCount > 1) {
+		DrawRectangleRec(nnp->boundingBox, SC_NORML_BASE);
+
+		// TODO: Make focus bar movable by arrowkeys
+		size_t focusBar_originX = dx + cpg->layerChoiceCurrent*(neuronSize + nRightPad) - neuronSize - nRightPad/2; 
+		size_t focusBar_originY = nnp->boundingBox.y; 
+		size_t focusBar_width   = 2*neuronSize + nRightPad; 
+		size_t focusBar_height  = nnp->boundingBox.height; 
+		DrawRectangle(focusBar_originX, focusBar_originY, focusBar_width, focusBar_height, SC_FOCUS_BASE);
+	}
+
+
+	for (size_t i = 0; i < layerCount; i++) {
+		size_t nOfNeurons = cpg->layers.items[i].nOfNeurons;
+		float layerInnerHeight = nOfNeurons*(neuronSize - 1) + nBottmPad*(nOfNeurons - 1);
+		size_t dy = nnp->boundingBox.y + nnp->boundingBox.height/2 - (layerInnerHeight)/2;
+
+		for (size_t j = 0; j < nOfNeurons; j++) {
+			DrawCircle(dx, dy, neuronSize, SC_PRESS_BORDER);
+
+			if (i < layerCount - 1) {
+				size_t nextLayerNOfN = cpg->layers.items[i+1].nOfNeurons;
+				float nextLIHeight = nextLayerNOfN*(neuronSize - 1) + nBottmPad*(nextLayerNOfN - 1);
+				size_t y = nnp->boundingBox.y + nnp->boundingBox.height/2 - (nextLIHeight)/2;
+				for (size_t k = 0; k < nextLayerNOfN; k++) {
+					size_t x = dx + nRightPad + neuronSize;
+					DrawLine(dx, dy, x, y, SC_PRESS_BORDER);
+					y += nBottmPad + neuronSize;
+				}
+			}
+
+
+			dy += nBottmPad + neuronSize;
+		}
+
+		dx += nRightPad + neuronSize;
+	}
+
+	return;
 }
 
 
