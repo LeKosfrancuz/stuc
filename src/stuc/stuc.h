@@ -10,13 +10,16 @@
 
 #define STUC_LRELU_FACT 0.1
 
-#define STUC_MAT_AT(mat, i, j) (mat).el[(i)*(mat).stride + (j)]
-#define STUC_NN_AT(nn, layer)  (nn).layers[(layer)]
-#define MAT_PRINT(mat) stuc_matPrint((mat), (#mat), 0)
-#define NN_PRINT(nn) stuc_nnPrint((nn), (#nn))
-#define STUC_NN_OUTPUT(nn) STUC_NN_AT((nn), (nn).layerCount).a
-#define STUC_NN_INPUT(nn) STUC_NN_AT((nn), 0).a
-#define STUC_LENP(p) sizeof (p) / sizeof ((p)[0])
+#define STUC_MAT_AT(mat, i, j)	(mat).el[(i) * (mat).stride + (j)]
+#define STUC_NN_AT(nn, layer)	(nn).layers[(layer)]
+
+#define MAT_PRINT(mat)		stuc_matPrint((mat), (#mat), 0)
+#define NN_PRINT(nn)		stuc_nnPrint((nn), (#nn))
+
+#define STUC_NN_OUTPUT(nn)	STUC_NN_AT((nn), (nn).layerCount).a
+#define STUC_NN_INPUT(nn)	STUC_NN_AT((nn), 0).a
+
+#define STUC_LENP(p)		sizeof (p) / sizeof ((p)[0])
 
 typedef struct {
 	size_t rows;
@@ -25,16 +28,85 @@ typedef struct {
 	float_t *el;
 } Stuc_mat;
 
+/* Zbroji matrice (a) + (b) te rezultat spremi u [a] 
+ *
+ * (a) i (b) moraju biti istih dimenzija
+ */
 void stuc_matAdd(Stuc_mat a, Stuc_mat b);
+
+/* Oduzme matrice (a) - (b) te rezultat spremi u [a]
+ *
+ * (a) i (b) moraju biti istih dimenzija
+ */
 void stuc_matSub(Stuc_mat a, Stuc_mat b);
-void stuc_matDot(Stuc_mat dest, Stuc_mat a, Stuc_mat b);
+
+/* Pomnoži matrice (a) * (b) te rezultat spremi u [dst]
+ *
+ * (a) i (b) moraju biti ulančanih dimenzija
+ *  - tj. a.cols == b.rows
+ * [dst] - mora biti odgovarajućih dimenzija
+ *  - tj. a.rows x b.cols
+ */
+void stuc_matDot(Stuc_mat dst, Stuc_mat a, Stuc_mat b);
+
+/* Kopira matricu (src) u matricu [dst]
+ * (src) i [dst] moraju biti istih dimenzija
+ */
 void stuc_matCpy(Stuc_mat dst, Stuc_mat src);
+
+/* Ispituje jesu li matrice (a) i (b) jednake
+ * Jednake su ako su istih dimenzija i svi elementi
+ * su jednaki
+ *
+ * Return:
+ *	 True: Ako su jednake
+ *	False: Ako su različite
+ */
 bool stuc_matEq(Stuc_mat a, Stuc_mat b);
+
+/* Popunjava matricu (a) sa brojem (number) i sprema u [a]
+ */
 void stuc_matFill(Stuc_mat a, float_t number);
-void stuc_matPrint(Stuc_mat a, char* name, int indent);
+
+/* Ispisuje sadržaj matrice (a) na stdout
+ * !Funkcija je implementirana ako nije definiran NO_STDIO!
+ *
+ * (a)      - matrica čiji se sadržaj ispisuje
+ * (name)   - ime matrice kako će se pokazati pri ispisu
+ * (indent) - indentacija ispisa od lijevog ruba ekrana
+ *
+ * Napomena: Postoji MAKRO naredba koja pojednostavljuje ovu funkciju
+ *	     - MAT_PRINT(mat);
+ */
+void stuc_matPrint(Stuc_mat a, char *name, int indent);
+
+/* Vraća pregled jednog retka matrice (a)
+ * !Funkcija ne kopira podatke već postavlja pokazivač na elemente!
+ *
+ * (a)   - matrica iz koje će se "kopirati" redak
+ * (row) - index redka matrice (a) koji će se "kopirati"
+ *
+ * Return:
+ *	Nova matrica koja sadrži pregled na 1 redak podataka (stare)
+ */
+Stuc_mat stuc_matRowView(Stuc_mat a, size_t row);
+
+/* Alocira mjesto za spremanje elemenata matrice
+ * 
+ * (rows) - broj redaka nove matrice
+ * (cols) - broj stupaca nove matrice
+ *
+ * Return:
+ *	Nova matrica dimenzija (rows) x (cols)
+ */
 Stuc_mat stuc_matAlloc(size_t rows, size_t cols);
+
+/* Dealocira mjesto za spremanje elemenata matrice (a). To je: (a).el
+ * 
+ * Napomena: Neće alocirati mjesto koje zauzima struktura matrice
+ *	     to je na programeru. Dealocira samo elemente.
+ */
 void stuc_matFree(Stuc_mat a);
-Stuc_mat stuc_matRow(Stuc_mat a, size_t row);
 
 
 typedef enum {
@@ -55,25 +127,25 @@ typedef struct {
 typedef struct {
 	Stuc_activationFunction* aktivacije;   // tip aktivacije po sloju (ptr na tablicu)
 	size_t* arhitektura;
-	size_t  layerCount;
-	Stuc_nnLayer* layers; // count + 1, jer je 0. za input
+	size_t  layerCount;   // broj aktiviranih layera (tj. ne broji 0.)
+	Stuc_nnLayer* layers; // layerCount + 1 stvarnih elemenata, jer je 0. za input, a on nije "layer"
 } Stuc_nn;
 
 void stuc_nnForward(Stuc_nn nn);
 void stuc_nnFill(Stuc_nn nn, float_t number);
 void stuc_nnRand(Stuc_nn nn, float_t low, float_t high);
-void stuc_nnPrint(Stuc_nn nn, char* name);
+void stuc_nnPrint(Stuc_nn nn, char *name);
 float_t stuc_nnCost(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput);
 Stuc_nn stuc_nnBackprop(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput, float_t boost);
 void stuc_nnBackpropNoAlloc(Stuc_nn nn, Stuc_nn gdMap, Stuc_mat tInput, Stuc_mat tOutput, float_t boost);
 Stuc_nn stuc_nnFiniteDiff(Stuc_nn nn, float_t eps, Stuc_mat tInput, Stuc_mat tOutput);
 void stuc_nnFiniteDiffNoAlloc(Stuc_nn nn, Stuc_nn fd, float_t eps, Stuc_mat tInput, Stuc_mat tOutput);
 void stuc_nnApplyDiff(Stuc_nn nn, Stuc_nn fd, float_t learningRate);
-Stuc_nn stuc_nnAlloc(Stuc_activationFunction* aktivacije, size_t* arhitektura, size_t arhCount);
-void stuc_setActivation(Stuc_activationFunction* aktivacije, size_t aktCount, Stuc_activationFunction aktivacija);
+Stuc_nn stuc_nnAlloc(Stuc_activationFunction *aktivacije, size_t *arhitektura, size_t arhCount);
+void stuc_setActivation(Stuc_activationFunction *aktivacije, size_t aktCount, Stuc_activationFunction aktivacija);
 void stuc_nnFree(Stuc_nn nn); 
-uint8_t stuc_nnSaveToFile(Stuc_nn nn, const char* filePath);
-uint8_t stuc_nnLoadFromFile(Stuc_nn *nn, const char* filePath);
+uint8_t stuc_nnSaveToFile(Stuc_nn nn, const char *filePath);
+uint8_t stuc_nnLoadFromFile(Stuc_nn *nn, const char *filePath);
 void stuc_printIOFlags(uint8_t flags);
 
 typedef enum {

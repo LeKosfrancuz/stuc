@@ -10,7 +10,7 @@ int test_matRow_promjenaOriginala(void) {
 
 	Stuc_mat tInput = {4, 3, 3, tData};
 
-	Stuc_mat row = stuc_matRow(tInput, 1);
+	Stuc_mat row = stuc_matRowView(tInput, 1);
 
 
 	STUC_MAT_AT(row, 0, 0) = 4;

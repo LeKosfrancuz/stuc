@@ -10,7 +10,7 @@ int test_matRow_tocnostKopiranja_1(void) {
 
 	Stuc_mat tInput = {4, 2, 3, tData};
 
-	Stuc_mat row = stuc_matRow(tInput, 2);
+	Stuc_mat row = stuc_matRowView(tInput, 2);
 
 
 	if (STUC_MAT_AT(row, 0, 0) == 5.0 && STUC_MAT_AT(row, 0, 1) == 6.0)
@@ -31,7 +31,7 @@ int test_matRow_tocnostKopiranja_2(void) {
 
 	Stuc_mat tInput = {6, 2, 10, tData+8};
 
-	Stuc_mat row = stuc_matRow(tInput, tInput.rows-1);
+	Stuc_mat row = stuc_matRowView(tInput, tInput.rows-1);
 
 
 	if (STUC_MAT_AT(row, 0, 0) == 3.0 && STUC_MAT_AT(row, 0, 1) == 5.0)

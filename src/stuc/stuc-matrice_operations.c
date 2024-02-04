@@ -148,7 +148,7 @@ void stuc__matActivate(Stuc_mat a, Stuc_activationFunction f) {
 	return;
 }
 
-Stuc_mat stuc_matRow(Stuc_mat a, size_t row) {
+Stuc_mat stuc_matRowView(Stuc_mat a, size_t row) {
 	Stuc_mat mat;
 	mat.rows = 1;
 	mat.cols = a.cols;

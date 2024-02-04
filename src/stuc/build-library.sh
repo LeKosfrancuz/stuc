@@ -12,6 +12,9 @@ set -xe
 OUT=" ./seperate-obj-files/"
 [ ! -d $OUT ] && mkdir $OUT
 
+rm libstuc.a -f
+rm ${OUT}/* -f
+
 gcc -c stuc-backprop.c 		 -o ${OUT}backprop.o 	$CFlags $Debug
 gcc -c stuc-file_IO.c 		 -o ${OUT}file_IO.o 	$CFlags $Debug
 gcc -c stuc-finite_diff.c 	 -o ${OUT}finite_diff.o $CFlags $Debug

@@ -66,7 +66,7 @@ void stuc__nnBackprop(Stuc_nn nn, Stuc_nn gdMap, Stuc_mat tInput, Stuc_mat tOutp
 	stuc_nnFill(gdMap, 0.0);
 
 	for (size_t sample = 0; sample < sampleCount; sample++) {
-		stuc_matCpy(STUC_NN_INPUT(nn), stuc_matRow(tInput, sample));
+		stuc_matCpy(STUC_NN_INPUT(nn), stuc_matRowView(tInput, sample));
 		stuc_nnForward(nn);
 
 		for (size_t i = 0; i <= gdMap.layerCount; i++) {
