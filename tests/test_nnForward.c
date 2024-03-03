@@ -11,8 +11,8 @@ bool test_nnForward(void) {
 
 	stuc_nnFill(nn, 14);
 	size_t inputs = STUC_NN_INPUT(nn).cols;
-	STUC_NN_AT(nn, 0).w.el[0] = 0;
-	STUC_NN_AT(nn, 0).b.el[0] = 0;
+	STUC_NN_AT(nn, 1).w.el[0] = 0;
+	STUC_NN_AT(nn, 1).b.el[0] = 0;
 
 	bool passed = true;
 	for (size_t i = 0; i < inputs; i++) {
