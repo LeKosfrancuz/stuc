@@ -22,12 +22,12 @@ int main(void) {
 	size_t inputs = STUC_NN_INPUT(nn).cols;
 	for (size_t i = 0; i < inputs; i++) {
 		for (size_t j = 0; j < inputs; j++) {
-			STUC_MAT_AT(STUC_NN_INPUT(nn), 0, 0) = i;
-			STUC_MAT_AT(STUC_NN_INPUT(nn), 0, 1) = j;
+			STUC_AT_INPUT(nn, 0) = i;
+			STUC_AT_INPUT(nn, 1) = j;
 
 			stuc_nnForward(nn);
 
-			printf("  %zu ^ %zu = %f\n", i, j, STUC_MAT_AT(STUC_NN_OUTPUT(nn), 0, 0));
+			printf("  %zu ^ %zu = %f\n", i, j, STUC_AT_OUTPUT(nn, 0));
 		}
 	}
 
@@ -60,12 +60,12 @@ int main(void) {
 	inputs = STUC_NN_INPUT(nn).cols;
 	for (size_t i = 0; i < inputs; i++) {
 		for (size_t j = 0; j < inputs; j++) {
-			STUC_MAT_AT(STUC_NN_INPUT(nn), 0, 0) = i;
-			STUC_MAT_AT(STUC_NN_INPUT(nn), 0, 1) = j;
+			STUC_AT_INPUT(nn, 0) = i;
+			STUC_AT_INPUT(nn, 1) = j;
 
 			stuc_nnForward(nn);
 
-			printf("  %zu ? %zu = %f\n", i, j, STUC_MAT_AT(STUC_NN_OUTPUT(nn), 0, 0));
+			printf("  %zu ? %zu = %f\n", i, j, STUC_AT_OUTPUT(nn, 0));
 		}
 	}
 

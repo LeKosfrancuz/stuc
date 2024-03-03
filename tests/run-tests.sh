@@ -21,9 +21,12 @@ TESTS="$TESTS activationDerivSIGMOID_minusJedan activationDerivSIGMOID_jednaPolo
 #Tanh Tests
 TESTS="$TESTS activationDerivSIN_0 activationDerivSIN_45 activationDerivSIN_90 activationDerivSIN_180"
 
+#STUC_AT Tests
+TESTS="$TESTS stucAT_input stucAT_output stucAT_wrongInIndex stucAT_wrongOutIndex stucAT_funcArgOutput"
+
 echo -e "${B}Building Tests...$N\n"
 for i in $TESTS; do 
-    gcc test_${i}.c -o build/test_${i} ../src/stuc/libstuc.a -lm && echo -e "Built test [$C$i$N] ${S}succesfuly$N" || echo -e "${F}Failed$N to build test [$C$i$N]"
+    gcc test_${i}.c -o build/test_${i} ../src/stuc/libstuc.a -lm -ggdb && echo -e "Built test [$C$i$N] ${S}succesfuly$N" || echo -e "${F}Failed$N to build test [$C$i$N]"
 done
 
 LIST_OF_TEST_FILES=$TESTS ctest -j4 $1 $2 $3 $4 $5 $6

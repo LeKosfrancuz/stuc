@@ -19,6 +19,9 @@
 #define STUC_NN_OUTPUT(nn)	STUC_NN_AT((nn), (nn).layerCount).a
 #define STUC_NN_INPUT(nn)	STUC_NN_AT((nn), 0).a
 
+#define STUC_AT_OUTPUT(nn, i)	(STUC_ASSERT((i) < STUC_NN_OUTPUT((nn)).cols), STUC_NN_OUTPUT((nn)).el[(i)])  // Read only
+#define STUC_AT_INPUT(nn, i)	STUC_ASSERT((i) < STUC_NN_INPUT((nn)).cols), STUC_NN_INPUT((nn)).el[(i)]  // Write only
+
 #define STUC_LENP(p)		sizeof (p) / sizeof ((p)[0])
 
 typedef struct {
