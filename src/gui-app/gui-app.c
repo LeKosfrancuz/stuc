@@ -1,5 +1,5 @@
 #include "../stuc/stuc.h"
-#include <raylib.h>
+#include "external/raylib.h"
 #include <string.h>
 #define RAYGUI_IMPLEMENTATION
 #include "external/raygui.h"
@@ -108,7 +108,7 @@ void updateCostFunctionPanelGroup(CostFunctionPanelGroup* cfpg, size_t topPad, s
 void drawCostFunctionPanelGroup(CostFunctionPanelGroup* cfpg);
 
 NeuralNetworkPreview initNeuralNetworkPreview(void);
-void updateNeuralNetworkPreview(NeuralNetworkPreview* nnp);
+void updateNeuralNetworkPreview(NeuralNetworkPreview* nnp, ControlPanelGroup* cpg);
 void drawNeuralNetworkPreview(NeuralNetworkPreview* nnp, ControlPanelGroup* cpg);
 
 
@@ -186,7 +186,7 @@ int main(void) {
 
 		updateControlPanelGroup(&controlPanelGroup, layerPad);
 		updateCostFunctionPanelGroup(&costPanelGroup, topPad, innerLayerPad);
-		updateNeuralNetworkPreview(&neuralNetworkPreview);
+		updateNeuralNetworkPreview(&neuralNetworkPreview, &controlPanelGroup);
 		Rectangle testResultTypeRec;
 		{
 			size_t sX = testResultRec.x + 2*layerPad;
@@ -372,8 +372,31 @@ NeuralNetworkPreview initNeuralNetworkPreview(void) {
 	return nnp;
 }
 
-void updateNeuralNetworkPreview(NeuralNetworkPreview* nnp) {
+void updateNeuralNetworkPreview(NeuralNetworkPreview* nnp, ControlPanelGroup* cpg) {
 	nnp->boundingBox.width = 0.55 * g_screenWidth;
+	if (CheckCollisionPointRec(GetMousePosition(), nnp->boundingBox)) {
+		if (IsKeyPressed(KEY_LEFT)) {
+			if (cpg->layerChoiceCurrent > 0) {
+				cpg->layerChoiceCurrent--;
+			}
+		}
+		
+		if (IsKeyPressed(KEY_RIGHT)) {
+			if (cpg->layerChoiceCurrent < cpg->layerChoiceCount - 1) {
+				cpg->layerChoiceCurrent++;
+			}
+		}
+
+		if (IsKeyPressed(KEY_UP)) {
+			cpg->nOfNeuronsValue++;
+		}
+
+		if (IsKeyPressed(KEY_DOWN)) {
+			if (cpg->nOfNeuronsValue > 0) {
+				cpg->nOfNeuronsValue--;
+			}
+		}
+	}
 	return;
 }
 void drawNeuralNetworkPreview(NeuralNetworkPreview* nnp, ControlPanelGroup* cpg) {
@@ -393,7 +416,6 @@ void drawNeuralNetworkPreview(NeuralNetworkPreview* nnp, ControlPanelGroup* cpg)
 	if ((layerCount > 0 && cpg->layers.items[0].nOfNeurons >= 1) || layerCount > 1) {
 		DrawRectangleRec(nnp->boundingBox, SC_NORML_BASE);
 
-		// TODO: Make focus bar movable by arrowkeys
 		size_t focusBar_originX = dx + cpg->layerChoiceCurrent*(neuronSize + nRightPad) - neuronSize - nRightPad/2; 
 		size_t focusBar_originY = nnp->boundingBox.y; 
 		size_t focusBar_width   = 2*neuronSize + nRightPad; 
