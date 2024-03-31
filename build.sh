@@ -1,6 +1,6 @@
 #!/bin/bash
 CFlags=" -O3 -Wall -Wextra -pedantic -Wstrict-prototypes -Wold-style-definition -std=c99 src/stuc/libstuc.a -lm"
-Raylib="-lraylib"
+Raylib="-L./src/gui-app/external/lib -lraylib -I./src/gui-app/external"
 Debug=""
 argc=$#
 if [ $argc -eq 1 ] && [ $1 = "dbg" ] 
