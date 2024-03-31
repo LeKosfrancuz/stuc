@@ -14,6 +14,13 @@ pushd src/stuc/
 ./build-library.sh $1
 popd
 
+
+echo
+echo -e "\x1B[37;1mBuilding Raylib\x1B[37;0m"
+pushd src/gui-app/external/raylib
+make -j10
+popd
+
 echo 
 echo -e "\x1B[37;1mBuilding Demos\x1B[37;0m"
 
