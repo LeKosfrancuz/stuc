@@ -134,10 +134,46 @@ typedef struct {
 	Stuc_nnLayer* layers; // layerCount + 1 stvarnih elemenata, jer je 0. za input, a on nije "layer"
 } Stuc_nn;
 
+/* Prosljeđuje vrijednosti na ulazima neuronske mreže do izlaza
+ *
+ * (nn) - neuronska mreža kojoj se ulaz prosljeđuje
+ *
+ * Napomena: Potrebno je ručno postaviti vrijednosti na ulaze
+ *	     npr. STUC_AT_INPUT(nn, index_ulaza) = vrijednost_ulaza;
+ *	     slično za čitanje: float_t vrijednost_izlaza = STUC_AT_OUTPUT(nn, index_izlaza);
+ */
 void stuc_nnForward(Stuc_nn nn);
+
+/* Puni neuronsku mrežu s određenom vrijednošću
+ *
+ * (nn) - neuronska mreža kojoj se pune matrice
+ */
 void stuc_nnFill(Stuc_nn nn, float_t number);
+
+/* Puni neuronsku mrežu brojevima u rasponu od (low) do (high)
+ */
 void stuc_nnRand(Stuc_nn nn, float_t low, float_t high);
+
+/* Ispisuje sadržaj neuronske mreže (nn) na stdout
+ * !Funkcija je implementirana ako nije definiran NO_STDIO!
+ *
+ * (nn)     - matrica čiji se sadržaj ispisuje
+ * (name)   - ime matrice kako će se pokazati pri ispisu
+ *
+ * Napomena: Postoji MAKRO naredba koja pojednostavljuje ovu funkciju
+ *	     - NN_PRINT(nn);
+ */
 void stuc_nnPrint(Stuc_nn nn, char *name);
+
+/* Računa trenutnu cijenu neuronske mreže
+ * Cijena je broj od 0 do FLT_MAX te predstavlja odstupanje
+ * od početnih podataka (tOutput) za svaki ulaz (tInput).
+ * 0 je najmanje odstupanje.
+ *
+ * (nn)      - neuronska mreža čija se cijena računa
+ * (tInput)  - ulazni podatci
+ * (tOutput) - referentni izlazni podatci
+ */
 float_t stuc_nnCost(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput);
 Stuc_nn stuc_nnBackprop(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput, float_t boost);
 void stuc_nnBackpropNoAlloc(Stuc_nn nn, Stuc_nn gdMap, Stuc_mat tInput, Stuc_mat tOutput, float_t boost);
