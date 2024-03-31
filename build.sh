@@ -19,7 +19,7 @@ echo -e "\x1B[37;1mBuilding Demos\x1B[37;0m"
 
 [ ! -d "./builds/" ] && mkdir "./builds/"
 
-gcc demo/xor.c -o builds/Xor.out $CFlags $Debug && echo "Finished Building [Xor.out]" || echo "Build Failed [Xor.out]"
+gcc demo/xor.c -DPERFECT -o builds/Xor.out $CFlags $Debug && echo "Finished Building [Xor.out]" || echo "Build Failed [Xor.out]"
 gcc demo/loadAndFineTune.c -o builds/FineTuning.out $CFlags $Debug && echo "Finished Building [FineTuning.out]" || echo "Build Failed [FineTuning.out]"
 gcc src/gui-app/gui-app.c -o builds/Stuc.out $CFlags $Raylib $Debug && echo "Finished Building [Stuc.out]" || echo "Build Failed [Stuc.out]"
 

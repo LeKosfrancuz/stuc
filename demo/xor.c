@@ -12,7 +12,13 @@ float_t tData[] = {
 int main(void) {
 
 	srand(time(0));
-	// srand(14);
+
+#ifdef PERFECT
+	srand(1711132504);	//GNU_LINUX_PERFECT_SEED
+#ifdef WIN32
+	srand(1711132959);	//MS_WINDOWS_PERFECT_SEED
+#endif
+#endif
 	
 	size_t numberOfInputs  = 2;
 	size_t numberOfOutputs = 1;
@@ -30,7 +36,7 @@ int main(void) {
 
 	stuc_nnRand(nn, -1, 1);
 
-	size_t gen_count = 2*1000*1000;
+	const size_t gen_count = 2*100*1000;
 	float_t learningRate = 1;
 	float_t boostMultiplier = 1;
 
@@ -42,8 +48,8 @@ int main(void) {
 			printf("\rcost = %.32f                          \n", 
 				stuc_nnCost(nn, tInput, tOutput));
 		} else if (i % (gen_count / 10000) == 1) {
-			printf("\rTraning Neural Network Model: %.2f%s\r",
-				(i / (float_t)gen_count) * 100, "%"); 
+			printf("\rTraning Neural Network Model: %.2f%%\r",
+				(i / (float_t)gen_count) * 100);
 		}
 	}
 
