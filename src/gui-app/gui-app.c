@@ -18,9 +18,9 @@
 #include "./external/styles/style_cherry.h"      // raygui style: cherry
 #include "./external/styles/style_candy.h"       // raygui style: candy
 
-#define INFO  "[INFO]: "
-#define WARN  "[WARNING]: "
-#define ERROR "[ERROR]: "
+#define INFO  "[\x1b[0;36mINFO\x1b[0m]: "
+#define WARN  "[\x1b[0;38;5;208mWARNING\x1b[0m]: "
+#define ERROR "[\x1b[0;31mERROR\x1b[0m]: "
 #define log(level, ...)           printf(level); printf(__VA_ARGS__);
 
 #define VISUAL_STYLES_COUNT 12
