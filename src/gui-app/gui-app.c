@@ -209,26 +209,26 @@ int main(void) {
 		}
 
 		BeginDrawing();
-		ClearBackground(SC_BACKGROUND);
+			ClearBackground(SC_BACKGROUND);
 
-		GuiLabel((Rectangle){ leftPad, 10, (int)(g_screenWidth / 10), 24 }, "Style:");
-		Rectangle styleChooserRec = { leftPad + 42 ,10, 120, 24 };
-            	GuiComboBox(styleChooserRec, styleChooserText, &activeVisualStyle);
-		if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && CheckCollisionPointRec(GetMousePosition(), styleChooserRec)) {
-			activeVisualStyle = ((activeVisualStyle + VISUAL_STYLES_COUNT) - 1) % VISUAL_STYLES_COUNT;
-		}
+			GuiLabel((Rectangle){ leftPad, 10, (int)(g_screenWidth / 10), 24 }, "Style:");
+			Rectangle styleChooserRec = { leftPad + 42 ,10, 120, 24 };
+			GuiComboBox(styleChooserRec, styleChooserText, &activeVisualStyle);
+			if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && CheckCollisionPointRec(GetMousePosition(), styleChooserRec)) {
+				activeVisualStyle = ((activeVisualStyle + VISUAL_STYLES_COUNT) - 1) % VISUAL_STYLES_COUNT;
+			}
 
-		// Draw controls
-		drawNeuralNetworkPreview(&neuralNetworkPreview, &controlPanelGroup);
-		drawCostFunctionPanelGroup(&costPanelGroup);
-		GuiGroupBox(testResultRec,  provjeraRezultataText);
-		drawControlPanelGroup(&controlPanelGroup);
+			// Draw controls
+			drawNeuralNetworkPreview(&neuralNetworkPreview, &controlPanelGroup);
+			drawCostFunctionPanelGroup(&costPanelGroup);
+			GuiGroupBox(testResultRec,  provjeraRezultataText);
+			drawControlPanelGroup(&controlPanelGroup);
 
-		GuiToggleGroup( testResultTypeRec,  
-			TextFormat("%sTEKST;%sSLIKA", 
-				ICON_TO_TEXT(ICON_FILETYPE_TEXT), 
-				ICON_TO_TEXT(ICON_FILETYPE_IMAGE)), 
-			&nacinProvjereRezultataActive);
+			GuiToggleGroup( testResultTypeRec,  
+				TextFormat("%sTEKST;%sSLIKA", 
+					ICON_TO_TEXT(ICON_FILETYPE_TEXT), 
+					ICON_TO_TEXT(ICON_FILETYPE_IMAGE)), 
+				&nacinProvjereRezultataActive);
 
 		EndDrawing();
 	}
@@ -384,6 +384,8 @@ void updateNeuralNetworkPreview(NeuralNetworkPreview* nnp, ControlPanelGroup* cp
 		if (IsKeyPressed(KEY_RIGHT)) {
 			if (cpg->layerChoiceCurrent < cpg->layerChoiceCount - 1) {
 				cpg->layerChoiceCurrent++;
+			} else {
+				log(WARN, "Can not add another layer!\n");
 			}
 		}
 
