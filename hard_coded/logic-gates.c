@@ -48,7 +48,7 @@ int main() {
 
 	for (size_t i = 0; i < gen_count; i++) {
 		if (i % (gen_count / 10) == 0)
-			printf("%04zu: cost = %f, w1 = %f, w2 = %f, b = %f\n", i, cost(w1, w2, b), w1, w2, b);
+			printf("%7zu: cost = %f, w1 = %f, w2 = %f, b = %f\n", i, cost(w1, w2, b), w1, w2, b);
 
 		float c = cost(w1, w2, b);
 
@@ -60,6 +60,7 @@ int main() {
 	printf("%zu: cost = %f, w1 = %f, w2 = %f, b = %f\n",gen_count, cost(w1, w2, b), w1, w2, b);
 
 
+	printf("\nVerifikacija: \n");
 	for (size_t i = 0; i < 2; i++)
 		for (size_t j = 0; j < 2; j++) {
 			printf("%zu | %zu = %f\n", i, j, sigmoidf(i*w1 + j*w2 + b));

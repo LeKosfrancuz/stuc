@@ -34,7 +34,27 @@
         (da)->count += new_items_count;                                                     \
     } while (0)
 
+#define da_insert(da, i, item)                                                           \
+    do {                                                                                 \
+        if ((da)->count >= (da)->capacity) {                                             \
+            (da)->capacity = (da)->capacity == 0 ? DA_INIT_CAP : (da)->capacity*2;       \
+            (da)->items = realloc((da)->items, (da)->capacity*sizeof(*(da)->items));     \
+            assert((da)->items != NULL && "Buy more RAM lol");                           \
+        }                                                                                \
+        for (size_t __el_id = (da)->count; __el_id > (size_t)(i); __el_id--) {           \
+            memcpy(&(da)->items[__el_id], &(da)->items[__el_id-1], sizeof((da)->items[0]));\
+        }                                                                                \
+        (da)->items[(i)] = (item);                                                       \
+        (da)->count++;                                                                   \
+    } while (0)
 
+#define da_remove(da, i)                                                           \
+    do {                                                                                 \
+        (da)->count--;                                                                   \
+        for (size_t __el_id = (size_t)(i); __el_id < (da)->count; __el_id++) {           \
+            memcpy(&(da)->items[__el_id], &(da)->items[__el_id+1], sizeof((da)->items[0]));\
+        }                                                                                \
+    } while (0)
 /* Code snippet author:
 Copyright 2021 Alexey Kutepov <reximkut@gmail.com>
 

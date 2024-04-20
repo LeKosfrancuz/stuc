@@ -775,11 +775,14 @@ endif
 clean:	clean_shell_$(PLATFORM_SHELL)
 	@echo "removed all generated files!"
 
-clean_shell_sh:
+clean_shell_sh: remake_release_path
 	rm -fv *.o $(RAYLIB_RELEASE_PATH)/lib$(RAYLIB_LIB_NAME).a $(RAYLIB_RELEASE_PATH)/lib$(RAYLIB_LIB_NAME).bc $(RAYLIB_RELEASE_PATH)/lib$(RAYLIB_LIB_NAME).so* raygui.c physac.c
 ifeq ($(PLATFORM),PLATFORM_ANDROID)
 	rm -fv $(NATIVE_APP_GLUE)/android_native_app_glue.o
 endif
+
+remake_release_path:
+	mkdir $(RAYLIB_RELEASE_PATH) -p
 
 # Set specific target variable
 clean_shell_cmd: SHELL=cmd

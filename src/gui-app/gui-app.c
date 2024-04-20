@@ -59,12 +59,14 @@ typedef struct {
 	Rectangle activationChoiceCB;
 	Rectangle nOfNeuronsS;
 	Rectangle learnRateSB;
+	Rectangle removeLayerBT;
 
+	bool removeCurrLayer;		      // Button:	removeLayer
 	bool  nOfNeuronsEditMode;             // Spinner: 	nOfNeurons
 	int   layerChoiceCurrent;             // ToggleGroup: 	layerChoice
 	int layerSelectedCurrent;	      // current layer actualy shown
-	int   layerChoiceCount;               // ToggleGroup: 	layerChoice
 	int   activationFunctionChoiceCurrent;// ComboBox: 	activationChoice
+	bool layerChoiceEditMode;
 	int   nOfNeuronsValue;                // Spinner: 	nOfNeurons
 	float learnRateValue;                 // SliderBar: 	learnRate
 	
@@ -249,9 +251,9 @@ ControlPanelGroup initControlPanelGroup(void) {
 	};
 	
 	cpg.layerChoiceCurrent              = 0;            // ToggleGroup: layerChoice
-	cpg.layerChoiceCount                = 6;            // ToggleGroup: layerChoice
 	cpg.activationFunctionChoiceCurrent = 0;            // ComboBox:    activationChoice
 	cpg.nOfNeuronsEditMode              = false;        // Spinner:     nOfNeurons
+	cpg.layerChoiceEditMode             = false;        // GuiLayerSelector
 	cpg.nOfNeuronsValue                 = 0;            // Spinner:     nOfNeurons
 	cpg.learnRateValue                  = 0.0f;         // SliderBar:   learnRate
 	
@@ -265,32 +267,38 @@ void updateControlPanelGroup(ControlPanelGroup* cpg, size_t layerPad) {
 
 	size_t sX = cpg->boundingBox.x + leftPad;
 	size_t controlsWidth = cpg->boundingBox.width - (leftPad + rightPad);
+	size_t btn = cpg->layerChoiceTG.height;
 	
 	size_t sY = 64;
 	size_t spacing = 32;
-	const float lcc = cpg->layerChoiceCount;
 	cpg->layerL 		 = (Rectangle){ sX - 42,  sY,  40,  24 };			    // Label: layerLabel
-	cpg->activationL 	 = (Rectangle){ sX - 65,  sY + spacing,  56,  24 };		    // Label: activationLabel
-	cpg->layerChoiceTG  	 = (Rectangle){ sX, sY, controlsWidth/lcc - 1, 24 }; sY += spacing; // ToggleGroup: layerChoice
-	cpg->activationChoiceCB  = (Rectangle){ sX, sY, controlsWidth,         24 }; sY += spacing; // ComboBox: activationFunctionChoice
-	cpg->nOfNeuronsS  	 = (Rectangle){ sX, sY, controlsWidth,         24 }; sY += spacing; // Spinner: numberOfNeurons
-	cpg->learnRateSB  	 = (Rectangle){ sX, sY, controlsWidth,         16 }; sY += spacing; // SliderBar: learnRate
+	cpg->activationL 	 = (Rectangle){ sX - 65,  sY + spacing, 56, 24 };		    // Label: activationLabel
+	cpg->layerChoiceTG  	 = (Rectangle){ sX, sY, controlsWidth - btn - rightPad, 24 };	    // ToggleGroup: layerChoice
+	
+	sX +=  controlsWidth - btn;
+		cpg->removeLayerBT = (Rectangle){ sX, sY, btn, btn };  // Remove layer button
+	sX -=  controlsWidth - btn;
+	
+	sY += spacing;
+	cpg->activationChoiceCB  = (Rectangle){ sX, sY, controlsWidth,       24 }; sY += spacing; // ComboBox: activationFunctionChoice
+	cpg->nOfNeuronsS  	 = (Rectangle){ sX, sY, controlsWidth,       24 }; sY += spacing; // Spinner: numberOfNeurons
+	cpg->learnRateSB  	 = (Rectangle){ sX, sY, controlsWidth,       16 }; sY += spacing; // SliderBar: learnRate
 
 	if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && CheckCollisionPointRec(GetMousePosition(), cpg->activationChoiceCB)) {
 		cpg->activationFunctionChoiceCurrent = ((cpg->activationFunctionChoiceCurrent + STUC_ACTIVATIONS_COUNT) - 1) % STUC_ACTIVATIONS_COUNT;
 	}
 
-	if (cpg->layers.count < (size_t)cpg->layerChoiceCurrent + 1) {
+	if (cpg->layerChoiceCurrent > (int)cpg->layers.count) {
 		da_append(&cpg->layers, (Gui_nnLayer){0});
 		log(INFO, "Dodan layer %zu!\n", cpg->layers.count);
-	} else {
-		if (cpg->layerChoiceCurrent == cpg->layerSelectedCurrent) {
-			cpg->layers.items[cpg->layerChoiceCurrent].nOfNeurons = cpg->nOfNeuronsValue;
-			cpg->layers.items[cpg->layerChoiceCurrent].activation = cpg->activationFunctionChoiceCurrent;
+	} else if (cpg->layers.count > 0){
+		if (cpg->layerChoiceCurrent == cpg->layerSelectedCurrent + 1) {
+			cpg->layers.items[cpg->layerSelectedCurrent].nOfNeurons = cpg->nOfNeuronsValue;
+			cpg->layers.items[cpg->layerSelectedCurrent].activation = cpg->activationFunctionChoiceCurrent;
 		} else {
-			cpg->layerSelectedCurrent = cpg->layerChoiceCurrent;
-			cpg->nOfNeuronsValue = cpg->layers.items[cpg->layerChoiceCurrent].nOfNeurons;
-			cpg->activationFunctionChoiceCurrent = cpg->layers.items[cpg->layerChoiceCurrent].activation;
+			cpg->layerSelectedCurrent = cpg->layerChoiceCurrent - 1;
+			cpg->nOfNeuronsValue = cpg->layers.items[cpg->layerSelectedCurrent].nOfNeurons;
+			cpg->activationFunctionChoiceCurrent = cpg->layers.items[cpg->layerSelectedCurrent].activation;
 		}
 	}
 		
@@ -300,7 +308,15 @@ void updateControlPanelGroup(ControlPanelGroup* cpg, size_t layerPad) {
 void drawControlPanelGroup(ControlPanelGroup* cpg) {
 
 	GuiGroupBox(    cpg->boundingBox,	 cpg->controlPanelText);
-	GuiToggleGroup( cpg->layerChoiceTG,	 cpg->layerChoiceText, &cpg->layerChoiceCurrent);
+	
+	if (GuiSpinner( cpg->layerChoiceTG, NULL, 
+			     &cpg->layerChoiceCurrent, 1, 1000, cpg->layerChoiceEditMode)) {
+		cpg->layerChoiceEditMode = !cpg->layerChoiceEditMode;
+	} 
+	if (GuiButton(cpg->removeLayerBT, ICON_TO_TEXT(ICON_BIN))) {
+		cpg->removeCurrLayer = true;
+	}
+
 	GuiComboBox(    cpg->activationChoiceCB, cpg->activationFunctionChoiceText, &cpg->activationFunctionChoiceCurrent);
 	if (GuiSpinner( cpg->nOfNeuronsS,	 cpg->numberOfNeuronsText, 
 			&cpg->nOfNeuronsValue, 0, 1000, cpg->nOfNeuronsEditMode)) 
@@ -374,15 +390,15 @@ NeuralNetworkPreview initNeuralNetworkPreview(void) {
 
 void updateNeuralNetworkPreview(NeuralNetworkPreview* nnp, ControlPanelGroup* cpg) {
 	nnp->boundingBox.width = 0.55 * g_screenWidth;
-	if (CheckCollisionPointRec(GetMousePosition(), nnp->boundingBox)) {
+	if (CheckCollisionPointRec(GetMousePosition(), nnp->boundingBox) || cpg->removeCurrLayer) {
 		if (IsKeyPressed(KEY_LEFT)) {
-			if (cpg->layerChoiceCurrent > 0) {
+			if (cpg->layerSelectedCurrent > 0) {
 				cpg->layerChoiceCurrent--;
 			}
 		}
 		
 		if (IsKeyPressed(KEY_RIGHT)) {
-			if (cpg->layerChoiceCurrent < cpg->layerChoiceCount - 1) {
+			if ((size_t)cpg->layerSelectedCurrent < 1000) {
 				cpg->layerChoiceCurrent++;
 			} else {
 				log(WARN, "Can not add another layer!\n");
@@ -396,7 +412,25 @@ void updateNeuralNetworkPreview(NeuralNetworkPreview* nnp, ControlPanelGroup* cp
 		if (IsKeyPressed(KEY_DOWN)) {
 			if (cpg->nOfNeuronsValue > 0) {
 				cpg->nOfNeuronsValue--;
+			} else {
+				da_remove(&cpg->layers, cpg->layerSelectedCurrent);
+				log(INFO, "Izbrisan layer %d!\n", cpg->layerSelectedCurrent);
+				cpg->layerChoiceCurrent--;
 			}
+		}
+
+		if (IsKeyPressed(KEY_DELETE) || cpg->removeCurrLayer) {
+			// TODO: napraviti da kad se briše layer 0, da ne obriše i prvi
+			cpg->removeCurrLayer = false;
+			cpg->nOfNeuronsValue = 0;
+			da_remove(&cpg->layers, cpg->layerSelectedCurrent);
+			log(INFO, "Izbrisan layer %d!\n", cpg->layerSelectedCurrent);
+			cpg->layerChoiceCurrent--;
+		}
+
+		if (IsKeyPressed(KEY_INSERT)) {
+			da_insert(&cpg->layers, cpg->layerSelectedCurrent, (Gui_nnLayer){0});
+			log(INFO, "Umetnut layer %d!\n", cpg->layerSelectedCurrent);
 		}
 	}
 	return;
@@ -418,7 +452,7 @@ void drawNeuralNetworkPreview(NeuralNetworkPreview* nnp, ControlPanelGroup* cpg)
 	if ((layerCount > 0 && cpg->layers.items[0].nOfNeurons >= 1) || layerCount > 1) {
 		DrawRectangleRec(nnp->boundingBox, SC_NORML_BASE);
 
-		size_t focusBar_originX = dx + cpg->layerChoiceCurrent*(neuronSize + nRightPad) - neuronSize - nRightPad/2; 
+		size_t focusBar_originX = dx + cpg->layerSelectedCurrent*(neuronSize + nRightPad) - neuronSize - nRightPad/2; 
 		size_t focusBar_originY = nnp->boundingBox.y; 
 		size_t focusBar_width   = 2*neuronSize + nRightPad; 
 		size_t focusBar_height  = nnp->boundingBox.height; 

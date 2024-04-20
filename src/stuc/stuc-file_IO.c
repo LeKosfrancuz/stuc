@@ -85,6 +85,7 @@ uint8_t stuc_nnLoadFromFile(Stuc_nn *nn, const char *filePath) {
 
 	STUC_ASSERT(sizeof(typeof(nn->arhitektura[0])) == sizeof(size_t));
 	size_t *temp_arh = (size_t *)STUC_MALLOC(nn->layerCount + 1);
+	// TODO: fix heap coruption in this s_fread call
 	s_fread(temp_arh, sizeof(size_t), nn->layerCount + 1, fp);
 
 	STUC_ASSERT(sizeof(typeof(nn->aktivacije[0])) == sizeof(Stuc_activationFunction));
