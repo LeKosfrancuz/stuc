@@ -30,5 +30,5 @@ echo -e "\x1B[37;1mBuilding Demos\x1B[37;0m"
 # gcc demo/xor.c -DPERFECT -o builds/Xor.out $CFlags $Debug && echo "Finished Building [Xor.out]" || echo "Build Failed [Xor.out]"
 # gcc demo/nonsensical_ian_numbers.c -o builds/IanNums.out $CFlags $Debug && echo "Finished Building [IanNums.out]" || echo "Build Failed [IanNums.out]"
 # gcc demo/loadAndFineTune.c -o builds/FineTuning.out $CFlags $Debug && echo "Finished Building [FineTuning.out]" || echo "Build Failed [FineTuning.out]"
-gcc src/gui-app/gui-app.c -o builds/Stuc.out $CFlags $Raylib $Debug && echo "Finished Building [Stuc.out]" || echo "Build Failed [Stuc.out]"
+gcc src/gui-app/gui-app.c src/gui-app/scene_nnBuilder.c -o builds/Stuc.out $CFlags $Raylib $Debug && echo "Finished Building [Stuc.out]" || echo "Build Failed [Stuc.out]"
 
