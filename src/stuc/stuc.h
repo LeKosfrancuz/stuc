@@ -8,7 +8,9 @@
 #include <errno.h>
 #include <stdint.h>
 
+#ifndef STUC_LRELU_FACT
 #define STUC_LRELU_FACT 0.1
+#endif
 
 #define STUC_MAT_AT(mat, i, j)	(mat).el[(i) * (mat).stride + (j)]
 #define STUC_NN_AT(nn, layer)	(nn).layers[(layer)]
@@ -16,7 +18,7 @@
 #define MAT_PRINT(mat)		stuc_matPrint((mat), (#mat), 0)
 #define NN_PRINT(nn)		stuc_nnPrint((nn), (#nn))
 
-#define STUC_NN_OUTPUT(nn)	STUC_NN_AT((nn), (nn).layerCount).a
+#define STUC_NN_OUTPUT(nn)	STUC_NN_AT((nn), (nn).layer_count - 1).a
 #define STUC_NN_INPUT(nn)	STUC_NN_AT((nn), 0).a
 
 #define STUC_AT_OUTPUT(nn, i)	(STUC_ASSERT((i) < STUC_NN_OUTPUT((nn)).cols), STUC_NN_OUTPUT((nn)).el[(i)])  // Read only
@@ -117,6 +119,8 @@ typedef enum {
 	STUC_ACTIVATE_SIGMOID,
 	STUC_ACTIVATE_TANH,
 	STUC_ACTIVATE_SIN,
+	STUC_ACTIVATE_SILU,
+	STUC_ACTIVATE_SOFTMAX,
 	STUC_ACTIVATIONS_COUNT
 } Stuc_activationFunction;
 
@@ -130,8 +134,8 @@ typedef struct {
 typedef struct {
 	Stuc_activationFunction* aktivacije;   // tip aktivacije po sloju (ptr na tablicu)
 	size_t* arhitektura;
-	size_t  layerCount;   // broj aktiviranih layera (tj. ne broji 0.)
-	Stuc_nnLayer* layers; // layerCount + 1 stvarnih elemenata, jer je 0. za input, a on nije "layer"
+	size_t  layer_count;   // broj layera
+	Stuc_nnLayer* layers; // layerCount elemenata, 0. je za input pa nema `w` i `b` matrice
 } Stuc_nn;
 
 /* Prosljeđuje vrijednosti na ulazima neuronske mreže do izlaza
@@ -179,7 +183,7 @@ Stuc_nn stuc_nnBackprop(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput, float_t b
 void stuc_nnBackpropNoAlloc(Stuc_nn nn, Stuc_nn gdMap, Stuc_mat tInput, Stuc_mat tOutput, float_t boost);
 Stuc_nn stuc_nnFiniteDiff(Stuc_nn nn, float_t eps, Stuc_mat tInput, Stuc_mat tOutput);
 void stuc_nnFiniteDiffNoAlloc(Stuc_nn nn, Stuc_nn fd, float_t eps, Stuc_mat tInput, Stuc_mat tOutput);
-void stuc_nnApplyDiff(Stuc_nn nn, Stuc_nn fd, float_t learningRate);
+void stuc_nnApplyDiff(Stuc_nn nn, Stuc_nn diff, float_t learningRate);
 Stuc_nn stuc_nnAlloc(Stuc_activationFunction *aktivacije, size_t *arhitektura, size_t arhCount);
 void stuc_setActivation(Stuc_activationFunction *aktivacije, size_t aktCount, Stuc_activationFunction aktivacija);
 void stuc_nnFree(Stuc_nn nn); 

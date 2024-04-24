@@ -17,7 +17,7 @@ bool test_nnCost(void) {
 
 	Stuc_nnLayer layers[] = {{STUC_ACTIVATE_SIGMOID, w1, b1, a[0]}, {STUC_ACTIVATE_SIGMOID, w1, b1, a[1]}};
 
-	Stuc_nn nn = {NULL, NULL, 1, layers};
+	Stuc_nn nn = {NULL, NULL, 2, layers};
 
 	STUC_MAT_AT(w1, 0, 0) = 4.645961;
 	STUC_MAT_AT(w1, 1, 0) = 4.646396;

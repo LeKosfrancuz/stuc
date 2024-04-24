@@ -1,15 +1,16 @@
 #include "stuc.h"
 
-extern void stuc__matActivate(Stuc_mat a, Stuc_activationFunction f);
+extern void stuc__matActivate(Stuc_nn nn, size_t layer, size_t neuron);
 extern void stuc__matRand(Stuc_mat a, float_t low, float_t high);
 
 void stuc_nnForward(Stuc_nn nn) {
 	
-	for (size_t layer = 1; layer <= nn.layerCount; layer++) {
+	for (size_t layer = 1; layer < nn.layer_count; layer++) {
 		stuc_matDot(STUC_NN_AT(nn, layer).a, STUC_NN_AT(nn, layer - 1).a, STUC_NN_AT(nn, layer).w);
 		stuc_matAdd(STUC_NN_AT(nn, layer).a, STUC_NN_AT(nn, layer).b);
-		for (size_t i = 0; i < STUC_NN_AT(nn, layer).a.cols; i++)
-		stuc__matActivate(STUC_NN_AT(nn, layer).a, STUC_NN_AT(nn, layer).activation);
+		for (size_t i = 0; i < STUC_NN_AT(nn, layer).a.cols; i++) {
+			stuc__matActivate(nn, layer, i);
+		}
 	}
 
 	return;
@@ -20,7 +21,7 @@ void stuc_nnPrint(Stuc_nn nn, char *name) {
 	printf("\n%s = [\n", name);
 
 	stuc_matPrint(STUC_NN_INPUT(nn), (char *)"input", 4);
-	for (size_t i = 1; i <= nn.layerCount; i++) {
+	for (size_t i = 1; i < nn.layer_count; i++) {
 		char layerName[3][30] = {0};
 		snprintf(layerName[0], sizeof (layerName[0]), "w%zu", i);
 		snprintf(layerName[1], sizeof (layerName[1]), "b%zu", i);
@@ -36,7 +37,7 @@ void stuc_nnPrint(Stuc_nn nn, char *name) {
 
 void stuc_nnFill(Stuc_nn nn, float_t number) {
 	stuc_matFill(STUC_NN_INPUT(nn), number);
-	for (size_t i = 1; i <= nn.layerCount; i++) {
+	for (size_t i = 1; i < nn.layer_count; i++) {
 		stuc_matFill(STUC_NN_AT(nn, i).w, number);
 		stuc_matFill(STUC_NN_AT(nn, i).b, number);
 		stuc_matFill(STUC_NN_AT(nn, i).a, number);
@@ -47,8 +48,8 @@ void stuc_nnFill(Stuc_nn nn, float_t number) {
 
 void stuc_nnRand(Stuc_nn nn, float_t low, float_t high) {
 	stuc__matRand(STUC_NN_INPUT(nn), low, high);
-	for (size_t i = 0; i < nn.layerCount; i++) {
-		stuc__matRand(STUC_NN_AT(nn, i).a, low, high);
+	STUC_ASSERT(nn.layer_count > 0);
+	for (size_t i = 0; i < nn.layer_count; i++) {
 		stuc__matRand(STUC_NN_AT(nn, i).w, low, high);
 		stuc__matRand(STUC_NN_AT(nn, i).b, low, high);
 	}
@@ -82,17 +83,17 @@ float_t stuc_nnCost(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput) {
 	return cost / samples;
 }
 
-void stuc_nnApplyDiff(Stuc_nn nn, Stuc_nn fd, float_t learningRate) {
-	STUC_ASSERT(fd.layerCount == nn.layerCount);
+void stuc_nnApplyDiff(Stuc_nn nn, Stuc_nn diff, float_t learningRate) {
+	STUC_ASSERT(diff.layer_count == nn.layer_count);
 	
-	for (size_t layer = 1; layer <= nn.layerCount; layer++) {
+	for (size_t layer = 1; layer < nn.layer_count; layer++) {
 		for (size_t i = 0; i < STUC_NN_AT(nn, layer).w.rows; i++) {
 			for (size_t j = 0; j < STUC_NN_AT(nn, layer).w.cols; j++) {
-				STUC_MAT_AT(STUC_NN_AT(nn, layer).w, i, j) -= learningRate * STUC_MAT_AT(STUC_NN_AT(fd, layer).w, i, j);
+				STUC_MAT_AT(STUC_NN_AT(nn, layer).w, i, j) -= learningRate * STUC_MAT_AT(STUC_NN_AT(diff, layer).w, i, j);
 			}
 		}
 		for (size_t i = 0; i < STUC_NN_AT(nn, layer).b.cols; i++) {
-			STUC_MAT_AT(STUC_NN_AT(nn, layer).b, 0, i) -= learningRate * STUC_MAT_AT(STUC_NN_AT(fd, layer).b, 0, i);
+			STUC_MAT_AT(STUC_NN_AT(nn, layer).b, 0, i) -= learningRate * STUC_MAT_AT(STUC_NN_AT(diff, layer).b, 0, i);
 		}
 	
 	}
@@ -112,8 +113,8 @@ Stuc_nn stuc_nnAlloc(Stuc_activationFunction *aktivacije, size_t *arhitektura, s
 	
 	Stuc_nn nn;
 	nn.arhitektura = (size_t *)STUC_MALLOC(sizeof(size_t) * arhCount);
-	nn.layerCount  = arhCount - 1; // nn.layerCount ne ukljucuje a[0];
-	nn.aktivacije = (Stuc_activationFunction *)STUC_MALLOC(sizeof (Stuc_activationFunction) * (arhCount - 1));
+	nn.layer_count = arhCount;
+	nn.aktivacije  = (Stuc_activationFunction *)STUC_MALLOC(sizeof (Stuc_activationFunction) * (arhCount - 1));
 	nn.layers = (Stuc_nnLayer *)STUC_MALLOC(sizeof (Stuc_nnLayer) * (arhCount));
 
 	for (size_t i = 0; i < arhCount - 1; i++)
@@ -123,7 +124,7 @@ Stuc_nn stuc_nnAlloc(Stuc_activationFunction *aktivacije, size_t *arhitektura, s
 		nn.arhitektura[i] = arhitektura[i];
 
 	STUC_NN_INPUT(nn) = stuc_matAlloc(1, arhitektura[0]);
-	for (size_t layer = 1; layer <= nn.layerCount; layer++) {
+	for (size_t layer = 1; layer < nn.layer_count; layer++) {
 		STUC_NN_AT(nn, layer).activation = aktivacije[layer-1];
 		STUC_NN_AT(nn, layer).a = stuc_matAlloc(1, arhitektura[layer]);
 		STUC_NN_AT(nn, layer).b = stuc_matAlloc(1, arhitektura[layer]);
@@ -135,7 +136,7 @@ Stuc_nn stuc_nnAlloc(Stuc_activationFunction *aktivacije, size_t *arhitektura, s
 
 void stuc_nnFree(Stuc_nn nn) { 
 	stuc_matFree(STUC_NN_INPUT(nn));
-	for (size_t layer = 1; layer <= nn.layerCount; layer++) {
+	for (size_t layer = 1; layer < nn.layer_count; layer++) {
 		stuc_matFree(STUC_NN_AT(nn, layer).a);
 		stuc_matFree(STUC_NN_AT(nn, layer).b);
 		stuc_matFree(STUC_NN_AT(nn, layer).w);

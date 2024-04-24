@@ -5,10 +5,11 @@
 
 enum {
 	SC_NN_BUILDER,
-	SC_DEMO,
+	SC_IMAGE_RECOGNISER,
 	SC_COUNT
 } Scenes;
 #include "scene_nnBuilder.h"
+#include "scene_imageRecogniser.h"
 
 #define RAYGUI_IMPLEMENTATION
 #include "external/raygui.h"
@@ -28,6 +29,7 @@ enum {
 #include "./external/styles/style_sunny.h"       // raygui style: sunny
 #include "./external/styles/style_cherry.h"      // raygui style: cherry
 #include "./external/styles/style_candy.h"       // raygui style: candy
+void changeVisualStyle(int *prevStyle, const int crntStyle);
 
 size_t g_screenWidth = 800;
 size_t g_screenHeight = 600;
@@ -55,9 +57,10 @@ int main(void) {
 	SetTargetFPS(60);
 
 	const char* styleChooserText 		    = "default;Jungle;Lavanda;Dark;Ashes;Bluish;Cyber;Terminal;Enefete;Sunny;Cherry;Candy"; // STYLE CHOOSER
-	const char* sceneChooserText 		    = "nnBuilder;Demo"; // STYLE CHOOSER
+	const char* sceneChooserText 		    = "Neural Network Builder;Image Recogniser"; // STYLE CHOOSER
 
 	Scene_nnBuilder scene_nnBuilder = scene_nnBuilderInit();
+	Scene_imageRecog scene_imageRecog = scene_imageRecogInit();
 
 	while (!WindowShouldClose()) {
 		g_screenHeight = (size_t) GetScreenHeight();
@@ -67,7 +70,7 @@ int main(void) {
 		
 		switch (activeScene) {
 		case SC_NN_BUILDER: scene_nnBuilderUpdate(&scene_nnBuilder); break;
-		case SC_DEMO: /* There is no code here, for now */ break;
+		case SC_IMAGE_RECOGNISER: scene_imageRecogUpdate(&scene_imageRecog); break;
 		default: log(ERROR, "Unknown scene %d\n", activeScene);
 		}
 		
@@ -87,7 +90,9 @@ int main(void) {
 			{
 				const char* text = "Scene:";
 				Vector2 txtM = MeasureTextEx(GuiGetFont(), text, GuiGetStyle(DEFAULT, TEXT_SIZE), GuiGetStyle(DEFAULT, TEXT_SPACING));
-				Rectangle sceneChooserRec = { g_screenWidth - leftPad - 120 ,10, 120, 24 };
+
+				size_t width = 180;
+				Rectangle sceneChooserRec = { g_screenWidth - leftPad - width ,10, width, 24 };
 
 				GuiLabel((Rectangle)
 					{ 
@@ -105,7 +110,7 @@ int main(void) {
 
 			switch (activeScene) {
 			case SC_NN_BUILDER: scene_nnBuilderDraw(&scene_nnBuilder); break;
-			case SC_DEMO: scene_demoDraw(); break;
+			case SC_IMAGE_RECOGNISER: scene_imageRecogDraw(&scene_imageRecog); break;
 			default: log(ERROR, "Unknown scene %d\n", activeScene);
 			} 
 

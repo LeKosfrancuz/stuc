@@ -1694,6 +1694,7 @@ void ImageResizeCanvas(Image *image, int newWidth, int newHeight, int offsetX, i
         unsigned char *resizedData = (unsigned char *)RL_CALLOC(newWidth*newHeight*bytesPerPixel, 1);
 
         // TODO: Fill resized canvas with fill color (must be formatted to image->format)
+        memset(resizedData, fill.a, newWidth*newHeight*bytesPerPixel);
 
         int dstOffsetSize = ((int)dstPos.y*newWidth + (int)dstPos.x)*bytesPerPixel;
 
@@ -2352,6 +2353,7 @@ void ImageRotate(Image *image, int degrees)
 
         int bytesPerPixel = GetPixelDataSize(1, 1, image->format);
         unsigned char *rotatedData = (unsigned char *)RL_CALLOC(width*height, bytesPerPixel);
+        memset(rotatedData, 255, width*height*bytesPerPixel);
 
         for (int y = 0; y < height; y++)
         {

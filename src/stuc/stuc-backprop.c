@@ -1,24 +1,38 @@
 #include "stuc.h"
 
-float_t stuc__activationDerivative(float_t x, Stuc_activationFunction f);
+float_t stuc__activationDerivative(float_t x, Stuc_activationFunction f, size_t n_activations);
 void stuc__nnBackprop(Stuc_nn nn, Stuc_nn gdMap, Stuc_mat tInput, Stuc_mat tOutput, float_t boost);
 void stuc__calculateBackpropForLayerActivation(Stuc_nn nn, Stuc_nn gdMap, size_t layer, size_t act, float_t boost);
+float_t stuc__derivSoftmax(float_t x, size_t n_activations);
 
-float_t stuc__activationDerivative(float_t x, Stuc_activationFunction f) {
+float_t stuc__activationDerivative(float_t x, Stuc_activationFunction f, size_t n_activations) {
 	//x - aktiviran neuron
 	switch(f) {
 		case STUC_ACTIVATE_RELU:	return (x > 0) ? 1 : STUC_LRELU_FACT;
 		case STUC_ACTIVATE_SIGMOID:	return x * (1 - x);
 		case STUC_ACTIVATE_TANH:	return 1 - x * x;
 		case STUC_ACTIVATE_SIN:		return cos(asin(x));
+		case STUC_ACTIVATE_SILU:	return 0; // TODO
+		case STUC_ACTIVATE_SOFTMAX:	return stuc__derivSoftmax(x, n_activations); // TODO
 		default: STUC_ASSERT(0 && "The activation function is not supported!");
 	}
 	
 	return 0.0f;
 }
 
+float_t stuc__derivSoftmax(float_t x, size_t n_activations) {
+	// x je već aktiviran, prvit ću se da nije
+	double expSum = 0;
+	for (size_t i = 0; i < n_activations; i++)
+	{
+		expSum += exp(x);
+	}
+	double ex = exp(x);
+	return (ex * expSum - ex * ex) / (expSum * expSum);
+}
+
 Stuc_nn stuc_nnBackprop(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput, float_t boost) {
-	Stuc_nn gdMap = stuc_nnAlloc(nn.aktivacije, nn.arhitektura, nn.layerCount + 1);
+	Stuc_nn gdMap = stuc_nnAlloc(nn.aktivacije, nn.arhitektura, nn.layer_count);
 	stuc__nnBackprop(nn, gdMap, tInput, tOutput, boost);
 
 	return gdMap;
@@ -37,7 +51,7 @@ void stuc__calculateBackpropForLayerActivation(Stuc_nn nn, Stuc_nn gdMap, size_t
 
 	float_t currentAct = STUC_MAT_AT(STUC_NN_AT(nn, layer).a, 0, act);
 	float_t deltaAct = STUC_MAT_AT(STUC_NN_AT(gdMap, layer).a, 0, act);
-	float_t derivAct = stuc__activationDerivative(currentAct, STUC_NN_AT(nn, layer).activation);
+	float_t derivAct = stuc__activationDerivative(currentAct, STUC_NN_AT(nn, layer).activation, STUC_NN_AT(nn, layer).a.cols);
 
 	STUC_MAT_AT(STUC_NN_AT(gdMap, layer).b, 0, act) += boost * deltaAct * derivAct;
 
@@ -59,7 +73,7 @@ void stuc__nnBackprop(Stuc_nn nn, Stuc_nn gdMap, Stuc_mat tInput, Stuc_mat tOutp
 	STUC_ASSERT(tInput.cols == STUC_NN_INPUT(nn).cols);
 	STUC_ASSERT(tOutput.cols == STUC_NN_OUTPUT(nn).cols);
 
-	STUC_ASSERT(gdMap.layerCount == nn.layerCount);
+	STUC_ASSERT(gdMap.layer_count == nn.layer_count);
 	// STUC_SOFT_ASSERT(gdMap.arhitektura == nn.arhitektura);
 
 	size_t sampleCount = tInput.rows;
@@ -69,7 +83,7 @@ void stuc__nnBackprop(Stuc_nn nn, Stuc_nn gdMap, Stuc_mat tInput, Stuc_mat tOutp
 		stuc_matCpy(STUC_NN_INPUT(nn), stuc_matRowView(tInput, sample));
 		stuc_nnForward(nn);
 
-		for (size_t i = 0; i <= gdMap.layerCount; i++) {
+		for (size_t i = 0; i < gdMap.layer_count; i++) {
 			stuc_matFill(STUC_NN_AT(gdMap, i).a, 0);
 		}
 
@@ -80,7 +94,7 @@ void stuc__nnBackprop(Stuc_nn nn, Stuc_nn gdMap, Stuc_mat tInput, Stuc_mat tOutp
 		}
 
 		// layer - current
-		for (size_t layer = nn.layerCount; layer > 0; layer--) {
+		for (size_t layer = nn.layer_count - 1; layer > 0; layer--) {
 			// activation - current
 			for (size_t act = 0; act < STUC_NN_AT(nn, layer).a.cols; act++) {
 				stuc__calculateBackpropForLayerActivation(nn, gdMap, layer, act, boost);
@@ -88,7 +102,7 @@ void stuc__nnBackprop(Stuc_nn nn, Stuc_nn gdMap, Stuc_mat tInput, Stuc_mat tOutp
 		}
 	}
 
-	for (size_t i = 1; i <= gdMap.layerCount; i++) {
+	for (size_t i = 1; i < gdMap.layer_count; i++) {
 		for (size_t j = 0; j < STUC_NN_AT(gdMap, i).w.rows; j++) {
 			for (size_t k = 0; k < STUC_NN_AT(gdMap, i).w.cols; k++) {
 				STUC_MAT_AT(STUC_NN_AT(gdMap, i).w, j, k) /= sampleCount;

@@ -1,3 +1,4 @@
+#define STUC_LRELU_FACT 0.1
 #include "../src/stuc/stuc.h"
 #include <stdio.h>
 #include <time.h>
@@ -11,12 +12,14 @@ float_t tData[] = {
 
 int main(void) {
 
-	srand(time(0));
+	time_t tim = time(0);
+	srand(tim);
+	printf("perfect: %zu\n", tim);
 
 #ifdef PERFECT
-	srand(1711132504);	//GNU_LINUX_PERFECT_SEED
+	srand(1713945632);	//GNU_LINUX_PERFECT_SEED
 #ifdef WIN32
-	srand(1711132959);	//MS_WINDOWS_PERFECT_SEED
+	srand(1713947929);	//MS_WINDOWS_PERFECT_SEED
 #endif
 #endif
 	
@@ -28,7 +31,7 @@ int main(void) {
 	Stuc_mat tOutput = {numberOfSamples, numberOfOutputs, numberOfInputs + numberOfOutputs, tData + tInput.cols};
 
 	size_t arch[] = {2, 2, 1};
-	Stuc_activationFunction funk[STUC_LENP(arch)-1] = {STUC_ACTIVATE_SIGMOID, STUC_ACTIVATE_SIGMOID};
+	Stuc_activationFunction funk[STUC_LENP(arch)-1] = {0};
 	stuc_setActivation(funk, STUC_LENP(funk), STUC_ACTIVATE_RELU);
 
 	Stuc_nn nn = stuc_nnAlloc(funk, arch, STUC_LENP(arch));

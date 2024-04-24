@@ -50,3 +50,4 @@ allPlatform-build/*
 builds/*
 tests/Testing/Temporary/*
 tests/build/*
+.quickdrawcache/*

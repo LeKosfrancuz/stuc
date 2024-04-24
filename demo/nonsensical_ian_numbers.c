@@ -1,5 +1,7 @@
 #include "../src/stuc/stuc.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
 #include <time.h>
 
 float_t tData[] = {
@@ -53,7 +55,11 @@ int main(void) {
 	do {
 		float num;
 		printf("Unesi broj: ");
-		(void)scanf("%f", &num);
+		if(scanf("%f", &num) != 1) {
+			if (errno == 0) errno = EINVAL;
+			perror("Error reading number");
+			exit(EXIT_FAILURE);
+		}
 
 		if (num == 0) shouldExit = 1;
 		STUC_AT_INPUT(nn, 0) = num;
@@ -62,10 +68,10 @@ int main(void) {
 	} while(!shouldExit);
 
 
-	NN_PRINT(nn); 
+	// NN_PRINT(nn); 
 	printf("cost = %f\n", stuc_nnCost(nn, tInput, tOutput));
 	stuc_nnFree(nn);
 	stuc_nnFree(gdMap);
-	return 0;
+	return EXIT_SUCCESS;
 }
 

@@ -2,6 +2,7 @@
 #define _SCENE_NNBUILDER_H
 
 #include "scene_essentials.h"
+#include "dirent.h"
 
 typedef struct {
 	size_t nOfNeurons;
@@ -85,8 +86,6 @@ typedef struct {
 	size_t layerPad;
 	size_t innerLayerPad;
 } Scene_nnBuilder;
-
-void changeVisualStyle(int *prevStyle, const int crntStyle);
 
 Scene_nnBuilder scene_nnBuilderInit(void);
 void scene_nnBuilderUpdate(Scene_nnBuilder *s);

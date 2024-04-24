@@ -7,7 +7,7 @@ bool test_nnForward(void) {
 	
 	Stuc_nnLayer layers[] = {{STUC_ACTIVATE_SIGMOID, w1, b1, a[0]}, {STUC_ACTIVATE_SIGMOID, w1, b1, a[1]}};
 
-	Stuc_nn nn = {NULL, NULL, 1, layers};
+	Stuc_nn nn = {NULL, NULL, 2, layers};
 
 	stuc_nnFill(nn, 14);
 	size_t inputs = STUC_NN_INPUT(nn).cols;
