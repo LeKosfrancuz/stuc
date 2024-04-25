@@ -14,9 +14,6 @@ uint8_t stuc_nnSaveToFile(Stuc_nn nn, const char *filePath) {
 		fprintf(stderr, "\x1b[1;31mError\x1b[0;37m opening file \"%s\": %s\n", filePath, strerror(errno));
 		return returnFlags |= STUC_IOFLAG_UNABLE_TO_WRITE;
 	}
-
-	// TODO: napraviti pravu refaktorizaciju
-	nn.layer_count--;
 	
 	if (!STUC_SOFT_ASSERT(strlen(STUC_FILE_PREFIX) == 8)) returnFlags |= STUC_IOFLAG_TYPE_MISMATCH;
 	fwrite(STUC_FILE_PREFIX, strlen(STUC_FILE_PREFIX), 1, fp);
@@ -25,12 +22,12 @@ uint8_t stuc_nnSaveToFile(Stuc_nn nn, const char *filePath) {
 	fwrite(&nn.layer_count, sizeof(typeof(nn.layer_count)), 1, fp);
 
 	STUC_ASSERT(sizeof(typeof(nn.arhitektura[0])) == sizeof(size_t));
-	fwrite(nn.arhitektura, sizeof(size_t), nn.layer_count + 1, fp);
+	fwrite(nn.arhitektura, sizeof(size_t), nn.layer_count, fp);
 
 	STUC_ASSERT(sizeof(typeof(nn.aktivacije[0])) == sizeof(Stuc_activationFunction));
-	fwrite(nn.aktivacije, sizeof(Stuc_activationFunction), nn.layer_count, fp);
+	fwrite(nn.aktivacije, sizeof(Stuc_activationFunction), nn.layer_count - 1, fp);
 
-	for (size_t i = 1; i <= nn.layer_count; i++) {
+	for (size_t i = 1; i < nn.layer_count; i++) {
 		STUC_ASSERT(STUC_NN_AT(nn, i).w.cols == STUC_NN_AT(nn, i).b.cols && "Neural network is corrupt!");
 
 		const size_t rows = STUC_NN_AT(nn, i).w.rows;
@@ -45,9 +42,6 @@ uint8_t stuc_nnSaveToFile(Stuc_nn nn, const char *filePath) {
 	}
 
 	fclose(fp);
-
-	// TODO: napraviti pravu refaktorizaciju
-	nn.layer_count++;
 
 	return returnFlags;
 }
@@ -90,16 +84,15 @@ uint8_t stuc_nnLoadFromFile(Stuc_nn *nn, const char *filePath) {
 	s_fread(&nn->layer_count, sizeof(typeof(nn->layer_count)), 1, fp);
 
 	STUC_ASSERT(sizeof(typeof(nn->arhitektura[0])) == sizeof(size_t));
-	size_t *temp_arh = (size_t *)STUC_MALLOC((nn->layer_count + 1)*sizeof(size_t));
+	size_t *temp_arh = (size_t *)STUC_MALLOC((nn->layer_count)*sizeof(size_t));
 	// TODO: fix heap coruption in this s_fread call
-	s_fread(temp_arh, sizeof(size_t), nn->layer_count + 1, fp);
+	s_fread(temp_arh, sizeof(size_t), nn->layer_count, fp);
 
 	STUC_ASSERT(sizeof(typeof(nn->aktivacije[0])) == sizeof(Stuc_activationFunction));
-	Stuc_activationFunction *temp_act = (Stuc_activationFunction *)STUC_MALLOC(nn->layer_count * sizeof(Stuc_activationFunction));
-	s_fread(temp_act, sizeof(Stuc_activationFunction), nn->layer_count, fp);
+	Stuc_activationFunction *temp_act = (Stuc_activationFunction *)STUC_MALLOC((nn->layer_count - 1) * sizeof(Stuc_activationFunction));
+	s_fread(temp_act, sizeof(Stuc_activationFunction), nn->layer_count - 1, fp);
 
-	// TODO: napraviti pravu refaktorizaciju
-	*nn = stuc_nnAlloc(temp_act, temp_arh, nn->layer_count + 1);
+	*nn = stuc_nnAlloc(temp_act, temp_arh, nn->layer_count);
 	free(temp_act);
 	free(temp_arh);
 
