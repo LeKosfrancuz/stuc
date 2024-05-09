@@ -30,7 +30,12 @@
             (da)->items = realloc((da)->items, (da)->capacity*sizeof(*(da)->items));        \
             assert((da)->items != NULL && "Buy more RAM lol");                              \
         }                                                                                   \
-        memcpy((da)->items + (da)->count, new_items, new_items_count*sizeof(*(da)->items)); \
+        if ((new_items) != NULL) {                                                          \
+            void *__da_src_ptr = (new_items);                                               \
+            memcpy((da)->items + (da)->count, __da_src_ptr, (new_items_count)*sizeof(*(da)->items)); \
+        } else {                                                                            \
+            memset((da)->items + (da)->count, 0, (new_items_count)*sizeof(*(da)->items));   \
+        }                                                                                   \
         (da)->count += new_items_count;                                                     \
     } while (0)
 

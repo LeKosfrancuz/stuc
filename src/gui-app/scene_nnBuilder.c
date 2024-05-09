@@ -1,4 +1,8 @@
 #include "scene_nnBuilder.h"
+#include "dynamic-arrays.h"
+
+#define MAX_N_OF_NEURONS       1000000
+#define MAX_N_OF_LAYERS        1000000
 
 Scene_nnBuilder scene_nnBuilderInit(void) {
 	Scene_nnBuilder s;
@@ -130,9 +134,16 @@ void updateControlPanelGroup(ControlPanelGroup *cpg, size_t layerPad) {
 		cpg->activationFunctionChoiceCurrent = ((cpg->activationFunctionChoiceCurrent + STUC_ACTIVATIONS_COUNT) - 1) % STUC_ACTIVATIONS_COUNT;
 	}
 
+	if (cpg->nOfNeuronsValue > MAX_N_OF_NEURONS) cpg->nOfNeuronsValue = MAX_N_OF_NEURONS;
+	if (cpg->layerChoiceCurrent > MAX_N_OF_LAYERS) cpg->layerChoiceCurrent = MAX_N_OF_LAYERS;
+
 	if (cpg->layerChoiceCurrent > (int)cpg->layers.count) {
-		da_append(&cpg->layers, (Gui_nnLayer){0});
-		log(INFO, "Dodan layer %zu!\n", cpg->layers.count);
+		if (cpg->layerChoiceCurrent - (int)cpg->layers.count < 5) {
+			da_append(&cpg->layers, (Gui_nnLayer){0});
+			log(INFO, "Dodan layer %zu!\n", cpg->layers.count);
+		} else {
+			da_append_many(&cpg->layers, NULL, cpg->layerChoiceCurrent - (int)cpg->layers.count);
+		}
 	} else if (cpg->layers.count > 0){
 		if (cpg->layerChoiceCurrent == cpg->layerSelectedCurrent + 1) {
 			cpg->layers.items[cpg->layerSelectedCurrent].nOfNeurons = cpg->nOfNeuronsValue;
@@ -152,7 +163,7 @@ void drawControlPanelGroup(ControlPanelGroup *cpg) {
 	GuiGroupBox(    cpg->boundingBox,	 cpg->controlPanelText);
 	
 	if (GuiSpinner( cpg->layerChoiceTG, NULL, 
-			     &cpg->layerChoiceCurrent, 1, 1000, cpg->layerChoiceEditMode)) {
+			     &cpg->layerChoiceCurrent, 1, MAX_N_OF_LAYERS, cpg->layerChoiceEditMode)) {
 		cpg->layerChoiceEditMode = !cpg->layerChoiceEditMode;
 	} 
 	if (GuiButton(cpg->removeLayerBT, ICON_TO_TEXT(ICON_BIN))) {
@@ -161,7 +172,7 @@ void drawControlPanelGroup(ControlPanelGroup *cpg) {
 
 	GuiComboBox(    cpg->activationChoiceCB, cpg->activationFunctionChoiceText, &cpg->activationFunctionChoiceCurrent);
 	if (GuiSpinner( cpg->nOfNeuronsS,	 cpg->numberOfNeuronsText, 
-			&cpg->nOfNeuronsValue, 0, 1000, cpg->nOfNeuronsEditMode)) 
+			&cpg->nOfNeuronsValue, 0, MAX_N_OF_NEURONS, cpg->nOfNeuronsEditMode)) 
 			cpg->nOfNeuronsEditMode = !cpg->nOfNeuronsEditMode;
 	GuiSliderBar(   cpg->learnRateSB,	 cpg->learnRateText, NULL, &cpg->learnRateValue, 0, 100);
 	GuiLabel(       cpg->layerL,		 cpg->layerLabelText);
@@ -240,7 +251,7 @@ void updateNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cp
 		}
 		
 		if (IsKeyPressed(KEY_RIGHT)) {
-			if ((size_t)cpg->layerSelectedCurrent < 1000) {
+			if ((size_t)cpg->layerSelectedCurrent < MAX_N_OF_LAYERS) {
 				cpg->layerChoiceCurrent++;
 			} else {
 				log(WARN, "Can not add another layer!\n");
@@ -248,16 +259,18 @@ void updateNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cp
 		}
 
 		if (IsKeyPressed(KEY_UP)) {
-			cpg->nOfNeuronsValue++;
+			if ((size_t)cpg->nOfNeuronsValue < MAX_N_OF_NEURONS) {
+				cpg->nOfNeuronsValue++;
+			} else {
+				log(WARN, "Can not add another neuron!\n");
+			}
 		}
 
 		if (IsKeyPressed(KEY_DOWN)) {
 			if (cpg->nOfNeuronsValue > 0) {
 				cpg->nOfNeuronsValue--;
 			} else {
-				da_remove(&cpg->layers, cpg->layerSelectedCurrent);
-				log(INFO, "Izbrisan layer %d!\n", cpg->layerSelectedCurrent);
-				cpg->layerChoiceCurrent--;
+				cpg->removeCurrLayer = true;
 			}
 		}
 
@@ -282,16 +295,45 @@ void updateNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cp
 void drawNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cpg) {
 	GuiDummyRec(nnp->boundingBox,  nnp->dummyRecText);
 
+	size_t max_neurons = 0;
+	for (size_t layer = 0; layer < cpg->layers.count; layer++) {
+		size_t curr_neurons = cpg->layers.items[layer].nOfNeurons;
+		max_neurons = curr_neurons > max_neurons ? curr_neurons : max_neurons;
+	}
+
+	if (max_neurons == 0) return;
+	
 	size_t layerCount = cpg->layers.count;
-	size_t neuronSize = 10;
-	size_t nBottmPad = 3 * neuronSize;
-	size_t nRightPad = 4 * neuronSize;
+	float neuronSize = 50;
+	float nBottmPad = 3 * neuronSize;
+	float nRightPad = 4 * neuronSize;
 	float neuronMapInnerWidth = neuronSize*(layerCount - 1) + nRightPad*(layerCount - 1);
+	float neuronMapInnerHeight = neuronSize*max_neurons + nBottmPad*(max_neurons - 1);
 	/*
 	 * This is the width of the neuron map calculated from the circle centers instead of 
 	 * boxes arround them. The real width is this width + 2*neuronSize
 	 */
-	size_t dx = nnp->boundingBox.x + nnp->boundingBox.width/2 - (neuronMapInnerWidth)/2;
+
+	for (size_t i = 0; i < 1000; i++) {
+		neuronMapInnerWidth = neuronSize*(layerCount - 1) + nRightPad*(layerCount - 1);
+		size_t width = neuronMapInnerWidth + 2*neuronSize + nRightPad;
+
+		neuronMapInnerHeight = neuronSize*max_neurons + nBottmPad*max_neurons;
+		size_t height = neuronMapInnerHeight + 2*neuronSize + nBottmPad;
+
+		nBottmPad = 3 * neuronSize;
+		nRightPad = 4 * neuronSize;
+
+		if (neuronSize < 0) {
+			return;
+		}
+
+		if (width > nnp->boundingBox.width) neuronSize -= 0.15;
+		if (height > nnp->boundingBox.height) neuronSize -= 0.15;
+	}
+
+
+	float dx = nnp->boundingBox.x + nnp->boundingBox.width/2 - (neuronMapInnerWidth)/2;
 
 	if ((layerCount > 0 && cpg->layers.items[0].nOfNeurons >= 1) || layerCount > 1) {
 		DrawRectangleRec(nnp->boundingBox, SC_NORML_BASE);
@@ -306,18 +348,18 @@ void drawNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cpg)
 
 	for (size_t i = 0; i < layerCount; i++) {
 		size_t nOfNeurons = cpg->layers.items[i].nOfNeurons;
-		float layerInnerHeight = nOfNeurons*(neuronSize - 1) + nBottmPad*(nOfNeurons - 1);
-		size_t dy = nnp->boundingBox.y + nnp->boundingBox.height/2 - (layerInnerHeight)/2;
+		float layerInnerHeight = neuronSize*(nOfNeurons - 1) + nBottmPad*(nOfNeurons - 1);
+		float dy = nnp->boundingBox.y + nnp->boundingBox.height/2 - (layerInnerHeight)/2;
 
 		for (size_t j = 0; j < nOfNeurons; j++) {
 			DrawCircle(dx, dy, neuronSize, SC_PRESS_BORDER);
 
 			if (i < layerCount - 1) {
 				size_t nextLayerNOfN = cpg->layers.items[i+1].nOfNeurons;
-				float nextLIHeight = nextLayerNOfN*(neuronSize - 1) + nBottmPad*(nextLayerNOfN - 1);
-				size_t y = nnp->boundingBox.y + nnp->boundingBox.height/2 - (nextLIHeight)/2;
+				float nextLIHeight = neuronSize*(nextLayerNOfN - 1) + nBottmPad*(nextLayerNOfN - 1);
+				float y = nnp->boundingBox.y + nnp->boundingBox.height/2 - (nextLIHeight)/2;
 				for (size_t k = 0; k < nextLayerNOfN; k++) {
-					size_t x = dx + nRightPad + neuronSize;
+					float x = dx + nRightPad + neuronSize;
 					DrawLine(dx, dy, x, y, SC_PRESS_BORDER);
 					y += nBottmPad + neuronSize;
 				}
