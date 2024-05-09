@@ -262,12 +262,14 @@ void updateNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cp
 		}
 
 		if (IsKeyPressed(KEY_DELETE) || cpg->removeCurrLayer) {
-			// TODO: napraviti da kad se briše layer 0, da ne obriše i prvi
 			cpg->removeCurrLayer = false;
-			cpg->nOfNeuronsValue = 0;
 			da_remove(&cpg->layers, cpg->layerSelectedCurrent);
 			log(INFO, "Izbrisan layer %d!\n", cpg->layerSelectedCurrent);
-			cpg->layerChoiceCurrent--;
+			cpg->layerSelectedCurrent--;
+			cpg->layerChoiceCurrent = cpg->layerSelectedCurrent + 1;
+
+			cpg->nOfNeuronsValue = cpg->layers.items[cpg->layerSelectedCurrent].nOfNeurons;
+			cpg->activationFunctionChoiceCurrent = cpg->layers.items[cpg->layerSelectedCurrent].activation;
 		}
 
 		if (IsKeyPressed(KEY_INSERT)) {

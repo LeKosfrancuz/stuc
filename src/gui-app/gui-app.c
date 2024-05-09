@@ -40,9 +40,14 @@ void scene_demoDraw(void) {
 	return;
 }
 
+#define RESOURCES_PATH "./resources/"
+
 int main(void) {
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 	InitWindow(g_screenWidth, g_screenHeight, "Stuc");
+	Image window_icon = LoadImage(RESOURCES_PATH "window_icon.png");
+	ImageFormat(&window_icon, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+	SetWindowIcon(window_icon);
 
 	// Load default style
     	GuiLoadStyleBluish();
