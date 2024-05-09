@@ -180,15 +180,15 @@ void stuc_nnPrint(Stuc_nn nn, char *name);
  */
 float_t stuc_nnCost(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput);
 Stuc_nn stuc_nnBackprop(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput, float_t boost);
-void stuc_nnBackpropNoAlloc(Stuc_nn nn, Stuc_nn gdMap, Stuc_mat tInput, Stuc_mat tOutput, float_t boost);
+void stuc_nnBackpropNoAlloc(Stuc_nn nn, Stuc_nn gd_map, Stuc_mat tInput, Stuc_mat tOutput, float_t boost);
 Stuc_nn stuc_nnFiniteDiff(Stuc_nn nn, float_t eps, Stuc_mat tInput, Stuc_mat tOutput);
 void stuc_nnFiniteDiffNoAlloc(Stuc_nn nn, Stuc_nn fd, float_t eps, Stuc_mat tInput, Stuc_mat tOutput);
-void stuc_nnApplyDiff(Stuc_nn nn, Stuc_nn diff, float_t learningRate);
-Stuc_nn stuc_nnAlloc(Stuc_activationFunction *aktivacije, size_t *arhitektura, size_t arhCount);
-void stuc_setActivation(Stuc_activationFunction *aktivacije, size_t aktCount, Stuc_activationFunction aktivacija);
+void stuc_nnApplyDiff(Stuc_nn nn, Stuc_nn diff, float_t learning_rate);
+Stuc_nn stuc_nnAlloc(Stuc_activationFunction *aktivacije, size_t *arhitektura, size_t arh_count);
+void stuc_setActivation(Stuc_activationFunction *aktivacije, size_t akt_count, Stuc_activationFunction aktivacija);
 void stuc_nnFree(Stuc_nn nn); 
-uint8_t stuc_nnSaveToFile(Stuc_nn nn, const char *filePath);
-uint8_t stuc_nnLoadFromFile(Stuc_nn *nn, const char *filePath);
+uint8_t stuc_nnSaveToFile(Stuc_nn nn, const char *file_path);
+uint8_t stuc_nnLoadFromFile(Stuc_nn *nn, const char *file_path);
 void stuc_printIOFlags(uint8_t flags);
 
 typedef enum {

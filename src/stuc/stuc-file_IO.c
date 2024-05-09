@@ -5,20 +5,20 @@
 #define typeof(x) __typeof__(x)
 #define STUC_FILE_PREFIX "MKstucNN"
 
-uint8_t stuc_nnSaveToFile(Stuc_nn nn, const char *filePath) {
+uint8_t stuc_nnSaveToFile(Stuc_nn nn, const char *file_path) {
 	FILE *fp;
-	uint8_t returnFlags = 0;
+	uint8_t return_flags = 0;
 
-	fp = fopen(filePath, "wb");
+	fp = fopen(file_path, "wb");
 	if (fp == NULL) {
-		fprintf(stderr, "\x1b[1;31mError\x1b[0;37m opening file \"%s\": %s\n", filePath, strerror(errno));
-		return returnFlags |= STUC_IOFLAG_UNABLE_TO_WRITE;
+		fprintf(stderr, "\x1b[1;31mError\x1b[0;37m opening file \"%s\": %s\n", file_path, strerror(errno));
+		return return_flags |= STUC_IOFLAG_UNABLE_TO_WRITE;
 	}
 	
-	if (!STUC_SOFT_ASSERT(strlen(STUC_FILE_PREFIX) == 8)) returnFlags |= STUC_IOFLAG_TYPE_MISMATCH;
+	if (!STUC_SOFT_ASSERT(strlen(STUC_FILE_PREFIX) == 8)) return_flags |= STUC_IOFLAG_TYPE_MISMATCH;
 	fwrite(STUC_FILE_PREFIX, strlen(STUC_FILE_PREFIX), 1, fp);
 
-	if (!STUC_SOFT_ASSERT(sizeof(typeof(nn.layer_count)) == 8)) returnFlags |= STUC_IOFLAG_TYPE_MISMATCH;
+	if (!STUC_SOFT_ASSERT(sizeof(typeof(nn.layer_count)) == 8)) return_flags |= STUC_IOFLAG_TYPE_MISMATCH;
 	fwrite(&nn.layer_count, sizeof(typeof(nn.layer_count)), 1, fp);
 
 	STUC_ASSERT(sizeof(typeof(nn.arhitektura[0])) == sizeof(size_t));
@@ -43,7 +43,7 @@ uint8_t stuc_nnSaveToFile(Stuc_nn nn, const char *filePath) {
 
 	fclose(fp);
 
-	return returnFlags;
+	return return_flags;
 }
 
 void s_fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
@@ -56,36 +56,35 @@ void s_fread(void *ptr, size_t size, size_t nmemb, FILE *stream) {
 	return;
 }
 
-uint8_t stuc_nnLoadFromFile(Stuc_nn *nn, const char *filePath) {
+uint8_t stuc_nnLoadFromFile(Stuc_nn *nn, const char *file_path) {
 	FILE *fp;
-	uint8_t returnFlags = 0;
+	uint8_t return_flags = 0;
 
-	fp = fopen(filePath, "rb");
+	fp = fopen(file_path, "rb");
 	if (fp == NULL) {
-		fprintf(stderr, "\x1b[1;31mError\x1b[0;37m opening file \"%s\": %s\n", filePath, strerror(errno));
-		return returnFlags |= STUC_IOFLAG_UNABLE_TO_READ;
+		fprintf(stderr, "\x1b[1;31mError\x1b[0;37m opening file \"%s\": %s\n", file_path, strerror(errno));
+		return return_flags |= STUC_IOFLAG_UNABLE_TO_READ;
 	}
 	
 	if (!STUC_SOFT_ASSERT(strlen(STUC_FILE_PREFIX) == 8)) {
-		return returnFlags |= STUC_IOFLAG_TYPE_MISMATCH;
+		return return_flags |= STUC_IOFLAG_TYPE_MISMATCH;
 	}
 
 	char buff[9] = {0};
 	s_fread(buff, strlen(STUC_FILE_PREFIX), 1, fp);
 
 	if (strcmp(buff, STUC_FILE_PREFIX)) {
-		return returnFlags |= STUC_IOFLAG_WRONG_FILE_TYPE;
+		return return_flags |= STUC_IOFLAG_WRONG_FILE_TYPE;
 	}
 
 	if (!STUC_SOFT_ASSERT(sizeof(typeof(nn->layer_count)) == 8)) {
-		return returnFlags |= STUC_IOFLAG_TYPE_MISMATCH;
+		return return_flags |= STUC_IOFLAG_TYPE_MISMATCH;
 	}
 
 	s_fread(&nn->layer_count, sizeof(typeof(nn->layer_count)), 1, fp);
 
 	STUC_ASSERT(sizeof(typeof(nn->arhitektura[0])) == sizeof(size_t));
 	size_t *temp_arh = (size_t *)STUC_MALLOC((nn->layer_count)*sizeof(size_t));
-	// TODO: fix heap coruption in this s_fread call
 	s_fread(temp_arh, sizeof(size_t), nn->layer_count, fp);
 
 	STUC_ASSERT(sizeof(typeof(nn->aktivacije[0])) == sizeof(Stuc_activationFunction));
@@ -99,15 +98,15 @@ uint8_t stuc_nnLoadFromFile(Stuc_nn *nn, const char *filePath) {
 	for (size_t i = 1; i < nn->layer_count; i++) {
 		size_t rows;
 		size_t cols;
-		size_t tempID;
+		size_t temp_id;
 
-		s_fread(&tempID, sizeof(tempID), 1, fp);
-		(void)STUC_SOFT_ASSERT(tempID == i);
+		s_fread(&temp_id, sizeof(temp_id), 1, fp);
+		(void)STUC_SOFT_ASSERT(temp_id == i);
 
 		s_fread(&rows, sizeof(rows), 1, fp);
 		s_fread(&cols, sizeof(cols), 1, fp);
-		if (!STUC_SOFT_ASSERT(rows == STUC_NN_AT(*nn, i).w.rows)) returnFlags |= STUC_IOFLAG_FILE_ERROR;
-		if (!STUC_SOFT_ASSERT(cols == STUC_NN_AT(*nn, i).w.cols)) returnFlags |= STUC_IOFLAG_FILE_ERROR;
+		if (!STUC_SOFT_ASSERT(rows == STUC_NN_AT(*nn, i).w.rows)) return_flags |= STUC_IOFLAG_FILE_ERROR;
+		if (!STUC_SOFT_ASSERT(cols == STUC_NN_AT(*nn, i).w.cols)) return_flags |= STUC_IOFLAG_FILE_ERROR;
 
 		s_fread(STUC_NN_AT(*nn, i).b.el, sizeof(float_t), cols , fp);
 		s_fread(STUC_NN_AT(*nn, i).w.el, sizeof(float_t), cols * rows, fp);
@@ -116,7 +115,7 @@ uint8_t stuc_nnLoadFromFile(Stuc_nn *nn, const char *filePath) {
 
 	fclose(fp);
 
-	return returnFlags;
+	return return_flags;
 }
 
 void stuc_printIOFlags(uint8_t flags) {

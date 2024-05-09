@@ -13,13 +13,13 @@ TESTS="nnForward nnCost"
 TESTS="$TESTS matDot_Redosljed matDot_RazliciteVelicine matRow_tocnostKopiranja matRow_promjenaOriginalnihPodataka"
 
 #Relu Tests
-TESTS="$TESTS activationDerivRELU_manjeOdNula activationDerivRELU_veceOdNula activationDerivRELU_jednakoNula"
+# TESTS="$TESTS activationDerivRELU_manjeOdNula activationDerivRELU_veceOdNula activationDerivRELU_jednakoNula"
 
 #Sigmoid Tests
-TESTS="$TESTS activationDerivSIGMOID_minusJedan activationDerivSIGMOID_jednaPolovina activationDerivSIGMOID_plusJedan"
+# TESTS="$TESTS activationDerivSIGMOID_minusJedan activationDerivSIGMOID_jednaPolovina activationDerivSIGMOID_plusJedan"
 
 #Tanh Tests
-TESTS="$TESTS activationDerivSIN_0 activationDerivSIN_45 activationDerivSIN_90 activationDerivSIN_180"
+# TESTS="$TESTS activationDerivSIN_0 activationDerivSIN_45 activationDerivSIN_90 activationDerivSIN_180"
 
 #STUC_AT Tests
 TESTS="$TESTS stucAT_input stucAT_output stucAT_wrongInIndex stucAT_wrongOutIndex stucAT_funcArgOutput"

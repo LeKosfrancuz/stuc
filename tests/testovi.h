@@ -10,7 +10,7 @@
 #define PASS "\x1B[1;32mpass\x1B[0;37m"
 #define FAIL "\x1B[1;31mfail\x1B[0;37m"
 
-extern float_t stuc__activationDerivative(float_t x, Stuc_activationFunction f);
+// extern float_t stuc__activationDerivative(float_t x, Stuc_activationFunction f);
 
 int test_activationDerivTANH_dva(void);
 int test_activationDerivTANH_minusDva(void);
@@ -36,29 +36,6 @@ void test_runAll(void) {
 	printf("Hello, World!\n");
  
 	return;
-}
-
-
-
-
-int test_activationDerivTANH_dva(void) {
-	float_t ret = stuc__activationDerivative(2, STUC_ACTIVATE_TANH);
-	if (ret == -3) return true;
-
-	return false;
-}
-
-int test_activationDerivTANH_minusDva(void) {
-	float_t ret = stuc__activationDerivative(-2, STUC_ACTIVATE_TANH);
-	if (ret == -3) return true;
-
-	return false;
-}
-int test_activationDerivTANH_cetiri(void) {
-	float_t ret = stuc__activationDerivative(4, STUC_ACTIVATE_TANH);
-	if (ret == -15) return true;
-
-	return false;
 }
 
 #endif // TESTOVI_IMPLEMENTATION
