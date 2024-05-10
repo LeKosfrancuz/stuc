@@ -1,8 +1,12 @@
 #include "scene_nnBuilder.h"
 #include "dynamic-arrays.h"
+#include "external/raygui.h"
+#include "external/raylib.h"
+#include "scene_essentials.h"
 
 #define MAX_N_OF_NEURONS       1000000
 #define MAX_N_OF_LAYERS        1000000
+struct ErrorPopups g_error_stack = {0};
 
 Scene_nnBuilder scene_nnBuilderInit(void) {
 	Scene_nnBuilder s;
@@ -29,35 +33,47 @@ void scene_nnBuilderUpdate(Scene_nnBuilder *s) {
 	size_t layerPad  = s->layerPad;
 	size_t innerLayerPad = s->innerLayerPad;
 
+	const size_t layer1_min = 176;
+
 	s->aX.l1 = leftPad; s->aX.l2 = leftPad;
 	s->aY.s1 =  topPad; s->aY.s2 =  topPad;
 
 	if (s->costPanelGroup.isShown) {
-		s->costPanelGroup.boundingBox = (Rectangle) { s->aX.l1, s->aY.s1, 0.55 * g_screenWidth, 0.26 * g_screenHeight }; // GroupBox: costFunction
+		s->costPanelGroup.boundingBox = (Rectangle) { s->aX.l1, s->aY.s1, 0.55 * g_screenWidth, fmax(0.25 * g_screenHeight, layer1_min) }; // GroupBox: costFunction
 		s->aY.s1 += s->costPanelGroup.boundingBox.height + innerLayerPad;
 		s->aX.l1 += s->costPanelGroup.boundingBox.width + layerPad;
 	} else {
 		s->aY.s1 += s->controlPanelGroup.boundingBox.height + innerLayerPad;
 	}
-
-	s->neuralNetworkPreview.boundingBox = (Rectangle) { s->aX.l2, s->aY.s1, 0.55 * g_screenWidth, g_screenHeight - (s->aY.s1 + bottomPad) }; //DummyRec: neuralNetwork
-	s->aY.s1 += s->neuralNetworkPreview.boundingBox.height + innerLayerPad;
-	s->aX.l2 += s->neuralNetworkPreview.boundingBox.width + layerPad;
 	
 	{
 		size_t width = g_screenWidth - (s->aX.l1 + rightPad);
-		size_t height= fmax(0.25 * g_screenHeight, 145);
+		size_t height= fmax(0.25 * g_screenHeight, layer1_min);
 		s->controlPanelGroup.boundingBox = (Rectangle) { s->aX.l1, s->aY.s2, width, height }; // GroupBox: controlPanel
 	}
 
+	if (!s->neuralNetworkPreview.training) {
+		s->neuralNetworkPreview.boundingBox = (Rectangle) { s->aX.l2, fmax(s->aY.s1, s->aY.s2), g_screenWidth - rightPad - leftPad, g_screenHeight - (s->aY.s1 + bottomPad) }; //DummyRec: neuralNetwork
+	} else {
+		s->neuralNetworkPreview.boundingBox = (Rectangle) { s->aX.l2, s->aY.s1, 0.55 * g_screenWidth, g_screenHeight - (s->aY.s1 + bottomPad) }; //DummyRec: neuralNetwork
+		s->aY.s1 += s->neuralNetworkPreview.boundingBox.height + innerLayerPad;
+	}
+	s->aX.l2 += s->neuralNetworkPreview.boundingBox.width + layerPad;
+
 	s->aY.s2 += s->controlPanelGroup.boundingBox.height + innerLayerPad;
-	s->checkResultGroup.boundingBox = (Rectangle) { s->aX.l2, s->aY.s2, g_screenWidth - (s->aX.l2 + rightPad), g_screenHeight - (s->aY.s2 + bottomPad) }; //GroupBox: provjeraRezultata
+	
+	if (s->neuralNetworkPreview.training) {
+		s->checkResultGroup.boundingBox = (Rectangle) { s->aX.l2, s->aY.s2, g_screenWidth - (s->aX.l2 + rightPad), g_screenHeight - (s->aY.s2 + bottomPad) }; //GroupBox: provjeraRezultata
+	}
 
 
 	updateControlPanelGroup(&s->controlPanelGroup, layerPad);
-	updateCostFunctionPanelGroup(&s->costPanelGroup, topPad, innerLayerPad);
+	updateCostFunctionPanelGroup(&s->costPanelGroup, &s->neuralNetworkPreview, topPad, innerLayerPad);
 	updateNeuralNetworkPreview(&s->neuralNetworkPreview, &s->controlPanelGroup);
-	updateCheckResultGroup(&s->checkResultGroup, layerPad, innerLayerPad);
+
+	if (s->neuralNetworkPreview.training) {
+		updateCheckResultGroup(&s->checkResultGroup, layerPad, innerLayerPad);
+	}
 
 	if (IsKeyPressed(KEY_L)) {
 		log(INFO, "Layer count is: %zu\n", s->controlPanelGroup.layers.count);
@@ -73,28 +89,107 @@ void scene_nnBuilderUpdate(Scene_nnBuilder *s) {
 		log(INFO, "nnPreview; width: %.0f, dx: %zu\n", nnPreviewWidth, dx);
 	}
 
+	if (IsKeyPressed(KEY_R)) {
+		if (!s->neuralNetworkPreview.training) {
+			s->controlPanelGroup.layers.count = 0;
+			s->controlPanelGroup.layerSelectedCurrent = 0;
+			s->controlPanelGroup.removeCurrLayer = true;
+		}
+	}
+
 }
 void scene_nnBuilderDraw(Scene_nnBuilder *s) {
 	// Draw controls
 	drawNeuralNetworkPreview(&s->neuralNetworkPreview, &s->controlPanelGroup);
 	drawCostFunctionPanelGroup(&s->costPanelGroup);
-	drawCheckResultGroup(&s->checkResultGroup);
-	drawControlPanelGroup(&s->controlPanelGroup);
+	if (s->neuralNetworkPreview.training) {
+		drawCheckResultGroup(&s->checkResultGroup);
+	}
+	drawControlPanelGroup(&s->controlPanelGroup, &s->neuralNetworkPreview);
+
+	drawErrorPopup();
+}
+
+void drawErrorPopup(void) {
+	if (g_error_stack.count > 0) {
+		g_error_stack.error_shown = true;
+		ErrorPopup *error = &g_error_stack.items[0];
+
+		size_t font_size = 40;
+		Vector2 txt_size = MeasureTextEx(GuiGetFont(), error->text, font_size, 1);
+
+		size_t padding = 20;
+		size_t border_width = 5;
+		float inner_box_x = g_screenWidth/2.0 - txt_size.x/2;
+		float inner_box_y = g_screenHeight/2.0 - txt_size.y/2;
+		Rectangle  popup_rect = {inner_box_x - padding, inner_box_y - padding, txt_size.x + 2*padding, txt_size.y + 2*padding};
+		Rectangle  popup_border = {popup_rect.x + border_width, popup_rect.y + border_width, popup_rect.width - 2*border_width, popup_rect.height - 2*border_width};
+
+		if (error->initTimeSec == 0) error->initTimeSec = GetTime();
+
+		switch (error->opt) {
+		case EOPT_OK: assert(0 && "Not implemented!"); break;
+		case EOPT_YES_NO: assert(0 && "Not implemented!"); break;
+		case EOPT_OK_CANCLE: assert(0 && "Not implemented!"); break;
+		case EOPT_TIME: {
+			DrawRectangleRounded(popup_rect, 0.3, 15, WHITE);
+			DrawRectangleRoundedLines(popup_border, 0.3, 15, border_width/2.0, GRAY);
+			DrawTextEx(GuiGetFont(), error->text, (Vector2){inner_box_x, inner_box_y}, font_size, 1, error->error_level == ELEVEL_ERROR ? MAROON : ORANGE);
+			if (GetTime() - error->initTimeSec > error->waitTimeSec) {
+				g_error_stack.error_shown = false;
+				log(INFO, "REMOVED Error: %s.\n", error->text);
+				free(error->text);
+				da_remove(&g_error_stack, 0);
+			}
+		} break;
+		}
+	}
+}
+
+void push_time_error(const char *str, double time_sec) {
+	log(ERROR, "%s\n", str);
+	char *dup_str = calloc(256, 1);
+	dup_str = memcpy(dup_str, str, 256);
+	ErrorPopup error = {0};
+	error.opt = EOPT_TIME;
+	error.text = dup_str;
+	error.waitTimeSec = time_sec;
+	error.error_level = ELEVEL_ERROR;
+	da_append(&g_error_stack, error);
+}
+
+void push_time_warn(const char *str, double time_sec)  {
+	log(WARN, "%s\n", str);
+	char *dup_str = calloc(256, 1);
+	dup_str = memcpy(dup_str, str, 256);
+	ErrorPopup error = {0};
+	error.opt = EOPT_TIME;
+	error.text = dup_str;
+	error.waitTimeSec = time_sec;
+	error.error_level = ELEVEL_WARN;
+	da_append(&g_error_stack, error);
 }
 
 
 
-
 ControlPanelGroup initControlPanelGroup(void) {
+
 	ControlPanelGroup cpg = {
 		.controlPanelText               = "Kontrole",                    // GROUPBOX:    controlPanel
 		.layerChoiceText                = "ONE;TWO;THREE;FOUR;FIVE;SIX", // TOGGLEGROUP: layerChoice
-		.activationFunctionChoiceText   = "SIGMOID;RE:LU;TANH;SIN",      // COMBOBOX:    activationFunctionChoice
+		.activationFunctionChoiceText   = "SIGMOID;RE:LU;SOFTMAX;TANH;SIN",      // COMBOBOX:    activationFunctionChoice
 		.learnRateText                  = "Learn rate",                  // SLIDERBAR:   learnRate
 		.layerLabelText                 = "Layer",                       // LABEL:       layerLabel
 		.activationLabelText            = "Activation",                  // LABEL:       activationLabel
-		.numberOfNeuronsText            = "Number of N "                 // SPINNER:     numberOfNeurons
+		.numberOfNeuronsText            = "Number of N ",                 // SPINNER:     numberOfNeurons
+		.trainingToggleText             = "Start training ",                 // TOGGLE:     trainingToggleText
 	};
+	assert(STUC_LENP(cpg.activationLookup) == 5);
+	cpg.activationLookup[0] = STUC_ACTIVATE_SIGMOID;
+	cpg.activationLookup[1] = STUC_ACTIVATE_RELU;
+	cpg.activationLookup[2] = STUC_ACTIVATE_SOFTMAX;
+	cpg.activationLookup[3] = STUC_ACTIVATE_TANH;
+	cpg.activationLookup[4] = STUC_ACTIVATE_SIN;
 	
 	cpg.layerChoiceCurrent              = 0;            // ToggleGroup: layerChoice
 	cpg.activationFunctionChoiceCurrent = 0;            // ComboBox:    activationChoice
@@ -129,6 +224,7 @@ void updateControlPanelGroup(ControlPanelGroup *cpg, size_t layerPad) {
 	cpg->activationChoiceCB  = (Rectangle){ sX, sY, controlsWidth,       24 }; sY += spacing; // ComboBox: activationFunctionChoice
 	cpg->nOfNeuronsS  	 = (Rectangle){ sX, sY, controlsWidth,       24 }; sY += spacing; // Spinner: numberOfNeurons
 	cpg->learnRateSB  	 = (Rectangle){ sX, sY, controlsWidth,       16 }; sY += spacing; // SliderBar: learnRate
+	cpg->toggleTrainBT  	 = (Rectangle){ sX, sY, controlsWidth,       16 }; sY += spacing; // Toggle: start nn training process
 
 	if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && CheckCollisionPointRec(GetMousePosition(), cpg->activationChoiceCB)) {
 		cpg->activationFunctionChoiceCurrent = ((cpg->activationFunctionChoiceCurrent + STUC_ACTIVATIONS_COUNT) - 1) % STUC_ACTIVATIONS_COUNT;
@@ -158,7 +254,7 @@ void updateControlPanelGroup(ControlPanelGroup *cpg, size_t layerPad) {
 	return;
 }
 
-void drawControlPanelGroup(ControlPanelGroup *cpg) {
+void drawControlPanelGroup(ControlPanelGroup *cpg, NeuralNetworkPreview *nnp) {
 
 	GuiGroupBox(    cpg->boundingBox,	 cpg->controlPanelText);
 	
@@ -177,6 +273,7 @@ void drawControlPanelGroup(ControlPanelGroup *cpg) {
 	GuiSliderBar(   cpg->learnRateSB,	 cpg->learnRateText, NULL, &cpg->learnRateValue, 0, 100);
 	GuiLabel(       cpg->layerL,		 cpg->layerLabelText);
 	GuiLabel(       cpg->activationL,	 cpg->activationLabelText);
+	GuiToggle(cpg->toggleTrainBT, cpg->trainingToggleText, &nnp->training);
 }
 
 
@@ -230,20 +327,37 @@ void drawCostFunctionPanelGroup(CostFunctionPanelGroup *cfpg) {
 		DrawTextPro(GuiGetFont(), cfpg->costExpandButtonText, textPosition, rotationPoint, 90, textSize, 1, textColor);
 	}
 }
-void updateCostFunctionPanelGroup(CostFunctionPanelGroup *cfpg, size_t topPad, size_t expandButtonWidth) {
+void updateCostFunctionPanelGroup(CostFunctionPanelGroup *cfpg, NeuralNetworkPreview *nnp, size_t topPad, size_t expandButtonWidth) {
 	cfpg->expandButtonRec = (Rectangle) { 0, topPad, expandButtonWidth, 0.1 * g_screenHeight };
+
+	if (nnp->training) {
+		if (!nnp->prepared) cfpg->isShown = true;
+	}
 }
 
 NeuralNetworkPreview initNeuralNetworkPreview(void) {
 	NeuralNetworkPreview nnp = {
-		.dummyRecText = "Prikaz Neuronske mreze"     // DUMMYREC:    neuralNetwork
+		.dummyRecText = "Prikaz Neuronske mreze\n\n"
+		"strelice za dodavanje slojeva i neurona, \n"
+		"INS i DEL za umetanje i brisanje sloja, \n"
+		"R za resetiranje mreze"// DUMMYREC:    neuralNetwork
 	};
+
+	nnp.training                        = false;        // Training_mode:   training
+	nnp.prepared                        = false;        // Training_mode:   prepraring for training
+	nnp.nn = malloc(sizeof(Stuc_nn));
 	return nnp;
 }
 
 void updateNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cpg) {
-	nnp->boundingBox.width = 0.55 * g_screenWidth;
-	if (CheckCollisionPointRec(GetMousePosition(), nnp->boundingBox) || cpg->removeCurrLayer) {
+	// nnp->boundingBox.width = 0.55 * g_screenWidth;
+	if (!nnp->training) {
+		if (nnp->prepared) {
+			stuc_nnFree(*nnp->nn);
+			nnp->prepared = false;
+			log(INFO, "NN dealloced!\n");
+		}
+
 		if (IsKeyPressed(KEY_LEFT)) {
 			if (cpg->layerSelectedCurrent > 0) {
 				cpg->layerChoiceCurrent--;
@@ -254,7 +368,8 @@ void updateNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cp
 			if ((size_t)cpg->layerSelectedCurrent < MAX_N_OF_LAYERS) {
 				cpg->layerChoiceCurrent++;
 			} else {
-				log(WARN, "Can not add another layer!\n");
+				push_time_warn("Ne moze se dodati vise slojeva!", 1);
+				// log(WARN, "Can not add another layer!\n");
 			}
 		}
 
@@ -262,7 +377,8 @@ void updateNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cp
 			if ((size_t)cpg->nOfNeuronsValue < MAX_N_OF_NEURONS) {
 				cpg->nOfNeuronsValue++;
 			} else {
-				log(WARN, "Can not add another neuron!\n");
+				push_time_warn(TextFormat("Ne moze se dodati vise neurona!"), 1);
+				// log(WARN, "Can not add another neuron!\n");
 			}
 		}
 
@@ -289,7 +405,43 @@ void updateNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cp
 			da_insert(&cpg->layers, cpg->layerSelectedCurrent, (Gui_nnLayer){0});
 			log(INFO, "Umetnut layer %d!\n", cpg->layerSelectedCurrent);
 		}
+
+		return;
 	}
+
+	if (!nnp->prepared) {
+		size_t *arch = calloc(cpg->layers.count, sizeof(size_t));
+		Stuc_activationFunction *act = calloc(cpg->layers.count - 1, sizeof(Stuc_activationFunction));
+
+		arch[0] = cpg->layers.items[0].nOfNeurons;
+		if (arch[0] == 0) {
+			push_time_error("Sloj 1 nema neurona!", 2);
+			nnp->training = false;
+			return;
+		}
+
+		for (size_t i = 1; i < cpg->layers.count; i++) {
+			arch[i] = cpg->layers.items[i].nOfNeurons;			
+			act[i-1] = cpg->layers.items[i].activation;			
+
+
+			if (arch[i] == 0) {
+				push_time_error(TextFormat("Sloj %zu nema neurona!\n", i+1), 2);
+				nnp->training = false;
+				return;
+			}
+		}
+
+		*nnp->nn = stuc_nnAlloc(act, arch, cpg->layers.count);
+
+		free(arch);
+		free(act);
+
+		log(INFO, "NN Alloced!\n");
+
+		nnp->prepared = true;
+	}
+
 	return;
 }
 void drawNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cpg) {

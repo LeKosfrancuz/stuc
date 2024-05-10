@@ -24,6 +24,7 @@ typedef struct {
 	Rectangle nOfNeuronsS;
 	Rectangle learnRateSB;
 	Rectangle removeLayerBT;
+	Rectangle toggleTrainBT;
 
 	bool removeCurrLayer;		      // Button:	removeLayer
 	bool  nOfNeuronsEditMode;             // Spinner: 	nOfNeurons
@@ -33,6 +34,7 @@ typedef struct {
 	bool layerChoiceEditMode;
 	int   nOfNeuronsValue;                // Spinner: 	nOfNeurons
 	float learnRateValue;                 // SliderBar: 	learnRate
+	size_t activationLookup[5];
 	
 	Gui_nnLayers layers;
 
@@ -43,6 +45,7 @@ typedef struct {
 	const char *layerLabelText;                  // LABEL:       layerLabel
 	const char *activationLabelText;             // LABEL:       activationLabel
 	const char *numberOfNeuronsText;             // SPINNER:     numberOfNeurons
+	const char *trainingToggleText;              // TOGGLE:      trainingToggleText             
 }ControlPanelGroup;
 
 typedef struct {
@@ -58,7 +61,9 @@ typedef struct {
 typedef struct {
 	Rectangle boundingBox;
 
-	Stuc_nn nn;
+	Stuc_nn *nn;
+	bool training;			      // Toggle:	toggle nn training process
+	bool prepared;
 
 	const char *dummyRecText;
 } NeuralNetworkPreview;
@@ -70,6 +75,34 @@ typedef struct {
 	const char *provjeraRezultataText;        // GROUPBOX:    provjeraRezultata
 	int nacinProvjereRezultataActive;
 } CheckResultGroup;
+
+typedef enum {
+	EOPT_OK,
+	EOPT_OK_CANCLE,
+	EOPT_YES_NO,
+	EOPT_TIME, // Time cancel
+} ErrorOpt;
+
+typedef enum {
+	ELEVEL_WARN,
+	ELEVEL_ERROR,
+}ErrorLevel;
+
+typedef struct {
+	char *text;
+	ErrorOpt opt;
+	double initTimeSec;
+	double waitTimeSec;
+	ErrorLevel error_level;
+} ErrorPopup;
+
+struct ErrorPopups {
+	ErrorPopup *items;
+	size_t count;
+	size_t capacity;
+
+	bool error_shown;
+};
 
 typedef struct {
 	ControlPanelGroup controlPanelGroup;
@@ -93,10 +126,10 @@ void scene_nnBuilderDraw(Scene_nnBuilder *s);
 
 ControlPanelGroup initControlPanelGroup(void);
 void updateControlPanelGroup(ControlPanelGroup *cpg, size_t xPad);
-void drawControlPanelGroup(ControlPanelGroup *cpg);
+void drawControlPanelGroup(ControlPanelGroup *cpg, NeuralNetworkPreview *nnp);
 
 CostFunctionPanelGroup initCostFunctionPanelGroup(void);
-void updateCostFunctionPanelGroup(CostFunctionPanelGroup *cfpg, size_t topPad, size_t expandButtonWidth);
+void updateCostFunctionPanelGroup(CostFunctionPanelGroup *cfpg, NeuralNetworkPreview *nnp, size_t topPad, size_t expandButtonWidth);
 void drawCostFunctionPanelGroup(CostFunctionPanelGroup *cfpg);
 
 NeuralNetworkPreview initNeuralNetworkPreview(void);
@@ -106,5 +139,9 @@ void drawNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cpg)
 CheckResultGroup initCheckResultGroup(void);
 void updateCheckResultGroup(CheckResultGroup *crg, size_t layerPad, size_t innerLayerPad);
 void drawCheckResultGroup(CheckResultGroup *crg);
+
+void drawErrorPopup(void);
+void push_time_error(const char *str, double time_sec);
+void push_time_warn(const char *str, double time_sec);
 
 #endif // _SCENE_NNBUILDER_H
