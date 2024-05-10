@@ -6,6 +6,7 @@
 #include <string.h>
 #include "external/raygui.h"
 #include "dynamic-arrays.h"
+#include "time.h"
 
 extern size_t g_screenWidth;
 extern size_t g_screenHeight;

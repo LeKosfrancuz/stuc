@@ -1,6 +1,7 @@
 #ifndef _SCENE_NNBUILDER_H
 #define _SCENE_NNBUILDER_H
 
+#include "external/raylib.h"
 #include "scene_essentials.h"
 #include "dirent.h"
 
@@ -25,6 +26,9 @@ typedef struct {
 	Rectangle learnRateSB;
 	Rectangle removeLayerBT;
 	Rectangle toggleTrainBT;
+	Rectangle startStopTrainBT;
+	Rectangle clearGraphBT;
+	Rectangle batchSizeS;
 
 	bool removeCurrLayer;		      // Button:	removeLayer
 	bool  nOfNeuronsEditMode;             // Spinner: 	nOfNeurons
@@ -35,6 +39,7 @@ typedef struct {
 	int   nOfNeuronsValue;                // Spinner: 	nOfNeurons
 	float learnRateValue;                 // SliderBar: 	learnRate
 	size_t activationLookup[5];
+	bool batchSizeEditMode;		      // Spinner:       batch_size
 	
 	Gui_nnLayers layers;
 
@@ -46,13 +51,25 @@ typedef struct {
 	const char *activationLabelText;             // LABEL:       activationLabel
 	const char *numberOfNeuronsText;             // SPINNER:     numberOfNeurons
 	const char *trainingToggleText;              // TOGGLE:      trainingToggleText             
+	const char *startTrainToggleText;            // TOGGLE:      trainingToggleText
+	const char *stopTrainToggleText;             // TOGGLE:      trainingToggleText
+	const char *batchSizeText;                   // SPINNER:     tranining data size in batch
 }ControlPanelGroup;
+
+typedef struct {
+	float_t *items;
+	size_t count;
+	size_t capacity;
+} CostGraph;
 
 typedef struct {
 	Rectangle boundingBox;
 	Rectangle expandButtonRec;
+	Rectangle graphRect;
 
 	bool isShown; // Misli se na cijelu grupu
+	bool clearGraph;
+	CostGraph graph;
 
 	const char *costFunctionText;         // GROUPBOX:    costFunction (bounding box)
 	const char* costExpandButtonText;     // BUTTON:      expandButton
@@ -62,8 +79,16 @@ typedef struct {
 	Rectangle boundingBox;
 
 	Stuc_nn *nn;
+	Stuc_nn *gd_map;
 	bool training;			      // Toggle:	toggle nn training process
 	bool prepared;
+	bool learning_enabled;
+	bool learning_paused;
+	float_t cost;
+	int batch_size;
+
+	Stuc_mat tInput;
+	Stuc_mat tOutput;
 
 	const char *dummyRecText;
 } NeuralNetworkPreview;
@@ -125,8 +150,8 @@ void scene_nnBuilderUpdate(Scene_nnBuilder *s);
 void scene_nnBuilderDraw(Scene_nnBuilder *s);
 
 ControlPanelGroup initControlPanelGroup(void);
-void updateControlPanelGroup(ControlPanelGroup *cpg, size_t xPad);
-void drawControlPanelGroup(ControlPanelGroup *cpg, NeuralNetworkPreview *nnp);
+void updateControlPanelGroup(ControlPanelGroup *cpg, NeuralNetworkPreview *nnp, size_t layerPad);
+void drawControlPanelGroup(ControlPanelGroup *cpg, NeuralNetworkPreview *nnp, CostFunctionPanelGroup *cfpg);
 
 CostFunctionPanelGroup initCostFunctionPanelGroup(void);
 void updateCostFunctionPanelGroup(CostFunctionPanelGroup *cfpg, NeuralNetworkPreview *nnp, size_t topPad, size_t expandButtonWidth);
