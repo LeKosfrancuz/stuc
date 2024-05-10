@@ -29,6 +29,9 @@ typedef struct {
 	Rectangle startStopTrainBT;
 	Rectangle clearGraphBT;
 	Rectangle batchSizeS;
+	Rectangle epochCountL;
+	Rectangle epochCountLL;
+	Rectangle saveToFileBT;
 
 	bool removeCurrLayer;		      // Button:	removeLayer
 	bool  nOfNeuronsEditMode;             // Spinner: 	nOfNeurons
@@ -54,6 +57,8 @@ typedef struct {
 	const char *startTrainToggleText;            // TOGGLE:      trainingToggleText
 	const char *stopTrainToggleText;             // TOGGLE:      trainingToggleText
 	const char *batchSizeText;                   // SPINNER:     tranining data size in batch
+	const char *epochCountText;		     // LABEL:	     shows epoch count
+	const char *saveToFileText;
 }ControlPanelGroup;
 
 typedef struct {
@@ -86,6 +91,8 @@ typedef struct {
 	bool learning_paused;
 	float_t cost;
 	int batch_size;
+
+	size_t epoch_count;
 
 	Stuc_mat tInput;
 	Stuc_mat tOutput;
@@ -163,7 +170,7 @@ void drawNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cpg)
 
 CheckResultGroup initCheckResultGroup(void);
 void updateCheckResultGroup(CheckResultGroup *crg, size_t layerPad, size_t innerLayerPad);
-void drawCheckResultGroup(CheckResultGroup *crg);
+void drawCheckResultGroup(CheckResultGroup *crg, NeuralNetworkPreview *nnp);
 
 void drawErrorPopup(void);
 void push_time_error(const char *str, double time_sec);

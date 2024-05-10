@@ -11,10 +11,10 @@
 struct ErrorPopups g_error_stack = {0};
 
 float tData[] = {
-	1, 1, 0,
 	0, 0, 0,
 	1, 0, 1,
-	0, 1, 0,
+	0, 1, 1,
+	1, 1, 0,
 };
 size_t tData_samples = 4;
 
@@ -113,7 +113,7 @@ void scene_nnBuilderDraw(Scene_nnBuilder *s) {
 	drawNeuralNetworkPreview(&s->neuralNetworkPreview, &s->controlPanelGroup);
 	drawCostFunctionPanelGroup(&s->costPanelGroup);
 	if (s->neuralNetworkPreview.training) {
-		drawCheckResultGroup(&s->checkResultGroup);
+		drawCheckResultGroup(&s->checkResultGroup, &s->neuralNetworkPreview);
 	}
 	drawControlPanelGroup(&s->controlPanelGroup, &s->neuralNetworkPreview, &s->costPanelGroup);
 
@@ -196,6 +196,8 @@ ControlPanelGroup initControlPanelGroup(void) {
 		.startTrainToggleText           = "Start Training",                 // TOGGLE:     trainingToggleText
 		.stopTrainToggleText            = "Stop Training",                 // TOGGLE:     trainingToggleText
 		.batchSizeText                  = "Batch Size ",                 // TOGGLE:     trainingToggleText
+		.epochCountText                 = "Gen Count ",                 // TOGGLE:     trainingToggleText
+		.saveToFileText                 = "Save To File",                 // TOGGLE:     trainingToggleText
 	};
 	assert(STUC_LENP(cpg.activationLookup) == 5);
 	cpg.activationLookup[0] = STUC_ACTIVATE_SIGMOID;
@@ -209,7 +211,7 @@ ControlPanelGroup initControlPanelGroup(void) {
 	cpg.nOfNeuronsEditMode              = false;        // Spinner:     nOfNeurons
 	cpg.layerChoiceEditMode             = false;        // GuiLayerSelector
 	cpg.nOfNeuronsValue                 = 0;            // Spinner:     nOfNeurons
-	cpg.learnRateValue                  = 0.0f;         // SliderBar:   learnRate
+	cpg.learnRateValue                  = 0.5f;         // SliderBar:   learnRate
 	
 	return cpg;
 }
@@ -244,7 +246,11 @@ void updateControlPanelGroup(ControlPanelGroup *cpg, NeuralNetworkPreview *nnp, 
 
 	if (nnp->learning_enabled) {
 		cpg->startStopTrainBT = (Rectangle){ sX, sY, controlsWidth,       16 }; sY += spacing; // Toggle: enable7disable training process
-		cpg->batchSizeS = (Rectangle){ sX, sY, controlsWidth,       16 }; // Spinner: size of training data in batch
+		cpg->batchSizeS = (Rectangle){ sX, sY, controlsWidth,       16 }; sY += spacing; // Spinner: size of training data in batch
+		cpg->epochCountL = (Rectangle){ sX, sY, controlsWidth,       16 }; // Spinner: size of training data in batch
+		Vector2 epochTxt_size = MeasureTextEx(GuiGetFont(), cpg->epochCountText, GuiGetStyle(DEFAULT, TEXT_SIZE), GuiGetStyle(DEFAULT, TEXT_SPACING));
+		cpg->epochCountLL = (Rectangle){ sX - epochTxt_size.x - rightPad, sY, epochTxt_size.x, 16 }; sY += spacing; // Spinner: size of training data in batch
+		cpg->saveToFileBT = (Rectangle){ sX, sY, controlsWidth, 16 }; sY += spacing; // Spinner: size of training data in batch
 	}
 
 	if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && CheckCollisionPointRec(GetMousePosition(), cpg->activationChoiceCB)) {
@@ -253,6 +259,7 @@ void updateControlPanelGroup(ControlPanelGroup *cpg, NeuralNetworkPreview *nnp, 
 
 	if (cpg->nOfNeuronsValue > MAX_N_OF_NEURONS) cpg->nOfNeuronsValue = MAX_N_OF_NEURONS;
 	if (cpg->layerChoiceCurrent > MAX_N_OF_LAYERS) cpg->layerChoiceCurrent = MAX_N_OF_LAYERS;
+	if (nnp->batch_size > MAX_BATCH_SIZE) nnp->batch_size = MAX_BATCH_SIZE;
 
 	if (cpg->layerChoiceCurrent > (int)cpg->layers.count) {
 		if (cpg->layerChoiceCurrent - (int)cpg->layers.count < 5) {
@@ -305,6 +312,19 @@ void drawControlPanelGroup(ControlPanelGroup *cpg, NeuralNetworkPreview *nnp, Co
 
 		if (GuiSpinner(cpg->batchSizeS, cpg->batchSizeText, &nnp->batch_size, 4, MAX_BATCH_SIZE, cpg->batchSizeEditMode)) {
 			cpg->batchSizeEditMode = !cpg->batchSizeEditMode;
+		}
+
+		GuiLabel(cpg->epochCountL, TextFormat("%zu", nnp->epoch_count));
+		GuiLabel(cpg->epochCountLL, cpg->epochCountText);
+		if ((cpg->boundingBox.y + cpg->boundingBox.height) - (cpg->saveToFileBT.y + cpg->saveToFileBT.height) > 0) {
+			if (GuiButton(cpg->saveToFileBT, cpg->saveToFileText)) {
+				uint8_t ret = stuc_nnSaveToFile(*nnp->nn, RESOURCES_PATH"saved_nn.xnn");
+				if (ret) { 
+					stuc_printIOFlags(ret); 
+					return;
+				}
+				push_time_warn("NN saved to file, succesfully", 2);
+			}
 		}
 	}
 	GuiSliderBar(   cpg->learnRateSB,	 cpg->learnRateText, NULL, &cpg->learnRateValue, 0, 100);
@@ -415,6 +435,7 @@ NeuralNetworkPreview initNeuralNetworkPreview(void) {
 	nnp.prepared                        = false;        // Training_mode:   prepraring for training
 	nnp.nn = malloc(sizeof(Stuc_nn));
 	nnp.gd_map = malloc(sizeof(Stuc_nn));
+	nnp.batch_size = 32;
 	return nnp;
 }
 
@@ -524,12 +545,13 @@ void updateNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cp
 	}
 
 	if (nnp->prepared && nnp->learning_enabled && !nnp->learning_paused) {
-		for (size_t i = 0; i < 100; i++) {
+		for (size_t i = 0; i < (size_t)nnp->batch_size; i++) {
 			stuc_nnBackpropNoAlloc(*nnp->nn, *nnp->gd_map, nnp->tInput, nnp->tOutput, 1);
 			stuc_nnApplyDiff(*nnp->nn, *nnp->gd_map, cpg->learnRateValue/100);
 		}
 
 		nnp->cost = stuc_nnCost(*nnp->nn, nnp->tInput, nnp->tOutput);
+		nnp->epoch_count++;
 	}
 
 	return;
@@ -632,11 +654,33 @@ void updateCheckResultGroup(CheckResultGroup *crg, size_t layerPad, size_t inner
 	size_t sY = crg->boundingBox.y + innerLayerPad;
 	crg->resultsRect = (Rectangle) { sX, sY,  72,  24 }; // ToggleGroup: nacinProvjereRezultata
 }
-void drawCheckResultGroup(CheckResultGroup *crg) {
+void drawCheckResultGroup(CheckResultGroup *crg, NeuralNetworkPreview *nnp) {
 	GuiGroupBox(crg->boundingBox,  crg->provjeraRezultataText);
 	GuiToggleGroup( crg->resultsRect,  
-		TextFormat("%sTEKST;%sSLIKA", 
-			ICON_TO_TEXT(ICON_FILETYPE_TEXT), 
-			ICON_TO_TEXT(ICON_FILETYPE_IMAGE)), 
+		TextFormat("%sTEKST", ICON_TO_TEXT(ICON_FILETYPE_TEXT)), 
+		// TextFormat("%sTEKST;%sSLIKA", 
+		// 	ICON_TO_TEXT(ICON_FILETYPE_TEXT), 
+		// 	ICON_TO_TEXT(ICON_FILETYPE_IMAGE)), 
 		&crg->nacinProvjereRezultataActive);
+
+	size_t padding = 50;
+	for (size_t i = 0; i < tData_samples; i++) {
+		for (size_t j = 0; j < STUC_NN_INPUT(*nnp->nn).cols; j++) {
+			Vector2 pos = {crg->resultsRect.x+10*j, crg->resultsRect.y+10*i + padding};
+			DrawTextEx(GuiGetFont(), TextFormat("%.0f", STUC_MAT_AT(nnp->tInput, i, j)), pos, GuiGetStyle(DEFAULT, TEXT_SIZE), GuiGetStyle(DEFAULT, TEXT_SPACING), SC_NORML_TEXT);
+			STUC_AT_INPUT(*nnp->nn, j) = STUC_MAT_AT(nnp->tInput, i, j);
+
+			if (j == STUC_NN_INPUT(*nnp->nn).cols - 1) {
+				stuc_nnForward(*nnp->nn);
+
+				pos.x += 10 + padding;
+				DrawTextEx(GuiGetFont(), "rezultat ->", pos, GuiGetStyle(DEFAULT, TEXT_SIZE), GuiGetStyle(DEFAULT, TEXT_SPACING), SC_NORML_TEXT);
+				pos.x += 20 + padding;
+				for (size_t k = 0; k < STUC_NN_OUTPUT(*nnp->nn).cols; k++) {
+					pos.x += k*25;
+					DrawTextEx(GuiGetFont(), TextFormat("%.2f", STUC_AT_OUTPUT(*nnp->nn, k)), pos, GuiGetStyle(DEFAULT, TEXT_SIZE), GuiGetStyle(DEFAULT, TEXT_SPACING), SC_NORML_TEXT);
+				}
+			}
+		}
+	}
 }

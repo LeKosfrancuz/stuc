@@ -32,4 +32,6 @@ extern size_t g_screenHeight;
 
 #define SC_BACKGROUND GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR))
 
+#define RESOURCES_PATH "./resources/"
+
 #endif // _SCENE_ESSENTIALS_H

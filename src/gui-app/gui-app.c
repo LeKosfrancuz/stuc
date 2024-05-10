@@ -40,8 +40,6 @@ void scene_demoDraw(void) {
 	return;
 }
 
-#define RESOURCES_PATH "./resources/"
-
 int main(void) {
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 	InitWindow(g_screenWidth, g_screenHeight, "Stuc");
@@ -57,15 +55,15 @@ int main(void) {
 	int activeScene = SC_NN_BUILDER;
 
 	size_t leftPad   = 24;
-	size_t layerPad  = 8;
+	// size_t layerPad  = 8;
 
 	SetTargetFPS(60);
 
 	const char* styleChooserText 		    = "default;Jungle;Lavanda;Dark;Ashes;Bluish;Cyber;Terminal;Enefete;Sunny;Cherry;Candy"; // STYLE CHOOSER
-	const char* sceneChooserText 		    = "Neural Network Builder;Image Recogniser"; // STYLE CHOOSER
+	// const char* sceneChooserText 		    = "Neural Network Builder;Image Recogniser"; // STYLE CHOOSER
 
 	Scene_nnBuilder scene_nnBuilder = scene_nnBuilderInit();
-	Scene_imageRecog scene_imageRecog = scene_imageRecogInit();
+	// Scene_imageRecog scene_imageRecog = scene_imageRecogInit();
 
 	while (!WindowShouldClose()) {
 		g_screenHeight = (size_t) GetScreenHeight();
@@ -75,7 +73,7 @@ int main(void) {
 		
 		switch (activeScene) {
 		case SC_NN_BUILDER: scene_nnBuilderUpdate(&scene_nnBuilder); break;
-		case SC_IMAGE_RECOGNISER: scene_imageRecogUpdate(&scene_imageRecog); break;
+		// case SC_IMAGE_RECOGNISER: scene_imageRecogUpdate(&scene_imageRecog); break;
 		default: log(ERROR, "Unknown scene %d\n", activeScene);
 		}
 		
@@ -92,30 +90,30 @@ int main(void) {
 				}
 			}
 
-			{
-				const char* text = "Scene:";
-				Vector2 txtM = MeasureTextEx(GuiGetFont(), text, GuiGetStyle(DEFAULT, TEXT_SIZE), GuiGetStyle(DEFAULT, TEXT_SPACING));
-
-				size_t width = 180;
-				Rectangle sceneChooserRec = { g_screenWidth - leftPad - width ,10, width, 24 };
-
-				GuiLabel((Rectangle)
-					{ 
-					  g_screenWidth - leftPad - layerPad - sceneChooserRec.width - txtM.x, 
-					  10, 
-					  (int)(g_screenWidth / 10), 
-					  24 
-					}
-				, text);
-				GuiComboBox(sceneChooserRec, sceneChooserText, &activeScene);
-				if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && CheckCollisionPointRec(GetMousePosition(), sceneChooserRec)) {
-					activeScene = ((activeScene + SC_COUNT) - 1) % SC_COUNT;
-				}
-			}
+			// {
+			// 	const char* text = "Scene:";
+			// 	Vector2 txtM = MeasureTextEx(GuiGetFont(), text, GuiGetStyle(DEFAULT, TEXT_SIZE), GuiGetStyle(DEFAULT, TEXT_SPACING));
+			//
+			// 	size_t width = 180;
+			// 	Rectangle sceneChooserRec = { g_screenWidth - leftPad - width ,10, width, 24 };
+			//
+			// 	GuiLabel((Rectangle)
+			// 		{ 
+			// 		  g_screenWidth - leftPad - layerPad - sceneChooserRec.width - txtM.x, 
+			// 		  10, 
+			// 		  (int)(g_screenWidth / 10), 
+			// 		  24 
+			// 		}
+			// 	, text);
+			// 	GuiComboBox(sceneChooserRec, sceneChooserText, &activeScene);
+			// 	if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && CheckCollisionPointRec(GetMousePosition(), sceneChooserRec)) {
+			// 		activeScene = ((activeScene + SC_COUNT) - 1) % SC_COUNT;
+			// 	}
+			// }
 
 			switch (activeScene) {
 			case SC_NN_BUILDER: scene_nnBuilderDraw(&scene_nnBuilder); break;
-			case SC_IMAGE_RECOGNISER: scene_imageRecogDraw(&scene_imageRecog); break;
+			// case SC_IMAGE_RECOGNISER: scene_imageRecogDraw(&scene_imageRecog); break;
 			default: log(ERROR, "Unknown scene %d\n", activeScene);
 			} 
 
