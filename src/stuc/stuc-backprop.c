@@ -22,7 +22,7 @@ float_t stuc__activationDerivative(Stuc_nn nn, size_t layer, size_t neuron) {
 }
 
 float_t stuc__derivSoftmax(Stuc_nn nn, size_t layer, size_t neuron) {
-	// x je već aktiviran, prvit ću se da nije
+	// TODO: treba kopirati neuron poslije aktivacije, a ne ga vratiti nazad
 	double expSum = 0;
 	Stuc_mat curr_layer_act = STUC_NN_AT(nn, layer).a;
 	for (size_t i = 0; i < curr_layer_act.cols ; i++)

@@ -318,7 +318,7 @@ void drawControlPanelGroup(ControlPanelGroup *cpg, NeuralNetworkPreview *nnp, Co
 		GuiLabel(cpg->epochCountLL, cpg->epochCountText);
 		if ((cpg->boundingBox.y + cpg->boundingBox.height) - (cpg->saveToFileBT.y + cpg->saveToFileBT.height) > 0) {
 			if (GuiButton(cpg->saveToFileBT, cpg->saveToFileText)) {
-				uint8_t ret = stuc_nnSaveToFile(*nnp->nn, RESOURCES_PATH"saved_nn.xnn");
+				uint8_t ret = stuc_nnSaveToFile(*nnp->nn, RESOURCES_PATH"saved_nn.snn");
 				if (ret) { 
 					stuc_printIOFlags(ret); 
 					return;
