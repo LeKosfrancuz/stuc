@@ -50,19 +50,19 @@ void stuc__calculateBackpropForLayerActivation(Stuc_nn nn, Stuc_nn gd_map, size_
 	// layer -> current layer index
 	// act -> current activation index
 
-	float_t deltaAct = STUC_MAT_AT(STUC_NN_AT(gd_map, layer).a, 0, act);
-	float_t derivAct = stuc__activationDerivative(nn, layer, act);
+	float_t delta_act = STUC_MAT_AT(STUC_NN_AT(gd_map, layer).a, 0, act);
+	float_t deriv_act = stuc__activationDerivative(nn, layer, act);
 
-	STUC_MAT_AT(STUC_NN_AT(gd_map, layer).b, 0, act) += boost * deltaAct * derivAct;
+	STUC_MAT_AT(STUC_NN_AT(gd_map, layer).b, 0, act) += boost * delta_act * deriv_act;
 
-	for (size_t prevAct = 0; prevAct < STUC_NN_AT(nn, layer - 1).a.cols; prevAct++) {
+	for (size_t prev_act = 0; prev_act < STUC_NN_AT(nn, layer - 1).a.cols; prev_act++) {
 		// act - weight matrix col
-		// prevAct - weight matrix row
-		float_t previousAct = STUC_MAT_AT(STUC_NN_AT(nn, layer - 1).a, 0, prevAct);
-		float_t currentWeight = STUC_MAT_AT(STUC_NN_AT(nn, layer).w, prevAct, act);
+		// prev_act - weight matrix row
+		float_t previous_act = STUC_MAT_AT(STUC_NN_AT(nn, layer - 1).a, 0, prev_act);
+		float_t currentWeight = STUC_MAT_AT(STUC_NN_AT(nn, layer).w, prev_act, act);
 
-		STUC_MAT_AT(STUC_NN_AT(gd_map, layer).w, prevAct, act) += boost * deltaAct * derivAct * previousAct;
-		STUC_MAT_AT(STUC_NN_AT(gd_map, layer - 1).a, 0, prevAct) += boost * deltaAct * derivAct * currentWeight;
+		STUC_MAT_AT(STUC_NN_AT(gd_map, layer).w, prev_act, act) += boost * delta_act * deriv_act * previous_act;
+		STUC_MAT_AT(STUC_NN_AT(gd_map, layer - 1).a, 0, prev_act) += boost * delta_act * deriv_act * currentWeight;
 	}
 }
 
@@ -74,12 +74,11 @@ void stuc__nnBackprop(Stuc_nn nn, Stuc_nn gd_map, Stuc_mat tInput, Stuc_mat tOut
 	STUC_ASSERT(tOutput.cols == STUC_NN_OUTPUT(nn).cols);
 
 	STUC_ASSERT(gd_map.layer_count == nn.layer_count);
-	// STUC_SOFT_ASSERT(gd_map.arhitektura == nn.arhitektura);
 
-	size_t sampleCount = tInput.rows;
+	size_t sample_count = tInput.rows;
 	stuc_nnFill(gd_map, 0.0);
 
-	for (size_t sample = 0; sample < sampleCount; sample++) {
+	for (size_t sample = 0; sample < sample_count; sample++) {
 		stuc_matCpy(STUC_NN_INPUT(nn), stuc_matRowView(tInput, sample));
 		stuc_nnForward(nn);
 
@@ -105,11 +104,11 @@ void stuc__nnBackprop(Stuc_nn nn, Stuc_nn gd_map, Stuc_mat tInput, Stuc_mat tOut
 	for (size_t i = 1; i < gd_map.layer_count; i++) {
 		for (size_t j = 0; j < STUC_NN_AT(gd_map, i).w.rows; j++) {
 			for (size_t k = 0; k < STUC_NN_AT(gd_map, i).w.cols; k++) {
-				STUC_MAT_AT(STUC_NN_AT(gd_map, i).w, j, k) /= sampleCount;
+				STUC_MAT_AT(STUC_NN_AT(gd_map, i).w, j, k) /= sample_count;
 			}
 		}
 		for (size_t j = 0; j < STUC_NN_AT(gd_map, i).b.cols; j++) {
-			STUC_MAT_AT(STUC_NN_AT(gd_map, i).b, 0, j) /= sampleCount;
+			STUC_MAT_AT(STUC_NN_AT(gd_map, i).b, 0, j) /= sample_count;
 		}
 	}
 

@@ -102,6 +102,7 @@ typedef struct {
 
 typedef struct {
 	Rectangle boundingBox;
+	Rectangle provjeraRezToggleRect;
 	Rectangle resultsRect;
 	// TODO: prevedi na engleski
 	const char *provjeraRezultataText;        // GROUPBOX:    provjeraRezultata

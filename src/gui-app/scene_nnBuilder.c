@@ -7,7 +7,7 @@
 
 #define MAX_N_OF_NEURONS       1000000
 #define MAX_N_OF_LAYERS        1000000
-#define MAX_BATCH_SIZE         1000000
+#define MAX_BATCH_SIZE         100000
 struct ErrorPopups g_error_stack = {0};
 
 float tData[] = {
@@ -448,6 +448,7 @@ void updateNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cp
 			nnp->prepared = false;
 			nnp->learning_enabled = false;
 			nnp->learning_paused = false;
+			nnp->epoch_count = 0;
 			log(INFO, "NN dealloced!\n");
 		}
 
@@ -652,35 +653,80 @@ CheckResultGroup initCheckResultGroup(void) {
 void updateCheckResultGroup(CheckResultGroup *crg, size_t layerPad, size_t innerLayerPad) {
 	size_t sX = crg->boundingBox.x + 2*layerPad;
 	size_t sY = crg->boundingBox.y + innerLayerPad;
-	crg->resultsRect = (Rectangle) { sX, sY,  72,  24 }; // ToggleGroup: nacinProvjereRezultata
+	crg->provjeraRezToggleRect = (Rectangle) { sX, sY,  72,  24 }; // ToggleGroup: nacinProvjereRezultata
+	sY += 25;
+
+	sY += innerLayerPad;
+	crg->resultsRect = (Rectangle) { sX, sY, crg->boundingBox.width - 4*layerPad, crg->boundingBox.height - innerLayerPad - (sY - crg->boundingBox.y) };
 }
 void drawCheckResultGroup(CheckResultGroup *crg, NeuralNetworkPreview *nnp) {
 	GuiGroupBox(crg->boundingBox,  crg->provjeraRezultataText);
-	GuiToggleGroup( crg->resultsRect,  
-		TextFormat("%sTEKST", ICON_TO_TEXT(ICON_FILETYPE_TEXT)), 
-		// TextFormat("%sTEKST;%sSLIKA", 
-		// 	ICON_TO_TEXT(ICON_FILETYPE_TEXT), 
-		// 	ICON_TO_TEXT(ICON_FILETYPE_IMAGE)), 
+	GuiToggleGroup( crg->provjeraRezToggleRect,  
+		// TextFormat("%sTEKST", ICON_TO_TEXT(ICON_FILETYPE_TEXT)), 
+		TextFormat("%sTEKST;%sSLIKA", 
+			ICON_TO_TEXT(ICON_FILETYPE_TEXT), 
+			ICON_TO_TEXT(ICON_FILETYPE_IMAGE)), 
 		&crg->nacinProvjereRezultataActive);
 
-	size_t padding = 50;
-	for (size_t i = 0; i < tData_samples; i++) {
-		for (size_t j = 0; j < STUC_NN_INPUT(*nnp->nn).cols; j++) {
-			Vector2 pos = {crg->resultsRect.x+10*j, crg->resultsRect.y+10*i + padding};
-			DrawTextEx(GuiGetFont(), TextFormat("%.0f", STUC_MAT_AT(nnp->tInput, i, j)), pos, GuiGetStyle(DEFAULT, TEXT_SIZE), GuiGetStyle(DEFAULT, TEXT_SPACING), SC_NORML_TEXT);
-			STUC_AT_INPUT(*nnp->nn, j) = STUC_MAT_AT(nnp->tInput, i, j);
+	if (crg->nacinProvjereRezultataActive == 0) {
+		Font font = GuiGetFont();
+		int txt_size = GuiGetStyle(DEFAULT, TEXT_SIZE);
+		int txt_space = GuiGetStyle(DEFAULT, TEXT_SPACING);
+		Color txt_colour = SC_NORML_TEXT;
 
-			if (j == STUC_NN_INPUT(*nnp->nn).cols - 1) {
-				stuc_nnForward(*nnp->nn);
+		size_t top_padding = 25;
+		size_t element_padding = 10;
+		size_t layer_padding = 15;
+		for (size_t i = 0; i < tData_samples; i++) {
+			Vector2 pos = {crg->resultsRect.x, crg->resultsRect.y+layer_padding*i + top_padding};
+			for (size_t j = 0; j < STUC_NN_INPUT(*nnp->nn).cols; j++) {
+				pos.x += element_padding*j;
+				DrawTextEx(font, TextFormat("%.0f", STUC_MAT_AT(nnp->tInput, i, j)), pos, txt_size, txt_space, txt_colour);
+				STUC_AT_INPUT(*nnp->nn, j) = STUC_MAT_AT(nnp->tInput, i, j);
+			}
+			stuc_nnForward(*nnp->nn);
 
-				pos.x += 10 + padding;
-				DrawTextEx(GuiGetFont(), "rezultat ->", pos, GuiGetStyle(DEFAULT, TEXT_SIZE), GuiGetStyle(DEFAULT, TEXT_SPACING), SC_NORML_TEXT);
-				pos.x += 20 + padding;
-				for (size_t k = 0; k < STUC_NN_OUTPUT(*nnp->nn).cols; k++) {
-					pos.x += k*25;
-					DrawTextEx(GuiGetFont(), TextFormat("%.2f", STUC_AT_OUTPUT(*nnp->nn, k)), pos, GuiGetStyle(DEFAULT, TEXT_SIZE), GuiGetStyle(DEFAULT, TEXT_SPACING), SC_NORML_TEXT);
-				}
+			pos.x += 2*element_padding;
+			DrawTextEx(font, "rezultat ->", pos, txt_size, txt_space, txt_colour);
+			Vector2 result_text_size = MeasureTextEx(font, "rezultat ->", txt_size, txt_space);
+			pos.x += result_text_size.x + 2*element_padding;
+			for (size_t k = 0; k < STUC_NN_OUTPUT(*nnp->nn).cols; k++) {
+				pos.x += 3*element_padding;
+				DrawTextEx(font, TextFormat("%.2f", STUC_AT_OUTPUT(*nnp->nn, k)), pos, txt_size, txt_space, txt_colour);
 			}
 		}
+	} else if (crg->nacinProvjereRezultataActive == 1) {
+	        size_t outputs = STUC_NN_OUTPUT(*nnp->nn).cols;
+
+		size_t padding = 10;
+
+		if (outputs > 10 || tData_samples > 10) padding = 1;
+		if (outputs > 69 || tData_samples > 69) padding = 0;
+
+	        float block_w = (crg->resultsRect.width - (outputs - 1)*padding)/outputs;
+	        float block_h = (crg->resultsRect.height - (tData_samples - 1)*padding)/tData_samples;
+
+		for (size_t i = 0; i < tData_samples; i++) {
+			for (size_t j = 0; j < STUC_NN_INPUT(*nnp->nn).cols; j++) {
+				STUC_AT_INPUT(*nnp->nn, j) = STUC_MAT_AT(nnp->tInput, i, j);
+			}
+			
+			stuc_nnForward(*nnp->nn);
+
+
+			for (size_t k = 0; k < outputs; k++) {
+				Vector2 pos = {
+					crg->resultsRect.x + block_w*k + k*padding, 
+					crg->resultsRect.y + block_h*i + i*padding
+				};
+
+				float_t out = STUC_AT_OUTPUT(*nnp->nn, k);
+				float_t expected = STUC_MAT_AT(nnp->tOutput, i, k);
+				
+				Color block_colour = Fade(SC_NORML_TEXT, fabs(out/expected));
+				DrawRectangleV(pos, (Vector2) {block_w, block_h}, block_colour);
+			}
+		}
+
 	}
 }
