@@ -5,6 +5,14 @@
 #include "scene_essentials.h"
 #include "dirent.h"
 
+#define MAX_N_OF_NEURONS       1000000
+#define MAX_N_OF_LAYERS        1000000
+#define MAX_BATCH_SIZE         100000
+
+extern float *tData;
+extern size_t tData_samples;
+
+
 typedef struct {
 	size_t nOfNeurons;
 	int activation;
@@ -127,6 +135,7 @@ typedef struct {
 	double initTimeSec;
 	double waitTimeSec;
 	ErrorLevel error_level;
+	void (*resolve)(void);
 } ErrorPopup;
 
 struct ErrorPopups {

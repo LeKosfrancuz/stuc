@@ -28,10 +28,10 @@ echo -e "\x1B[37;1mBuilding Demos\x1B[37;0m"
 [ ! -d "./builds/" ] && mkdir "./builds/"
 
 gcc demo/xor.c -DPERFECT -o builds/Xor.out $CFlags $Debug && echo "Finished Building [Xor.out]" || echo "Build Failed [Xor.out]"
-gcc demo/zbrajalo.c -DFINITE_DIFF -o builds/Zbrajalo_diff.out $CFlags $Debug && echo "Finished Building [Zbrajalo_diff.out]" || echo "Build Failed [Zbrajalo_diff.out]"
-gcc demo/zbrajalo.c -DBACKPROP -o builds/Zbrajalo_bp.out $CFlags $Debug && echo "Finished Building [Zbrajalo_bp.out]" || echo "Build Failed [Zbrajalo_bp.out]"
+gcc demo/zbrajalo.c -DPERFECT -DFINITE_DIFF -o builds/Zbrajalo_diff.out $CFlags $Debug && echo "Finished Building [Zbrajalo_diff.out]" || echo "Build Failed [Zbrajalo_diff.out]"
+gcc demo/zbrajalo.c -DPERFECT -DBACKPROP -o builds/Zbrajalo_bp.out $CFlags $Debug && echo "Finished Building [Zbrajalo_bp.out]" || echo "Build Failed [Zbrajalo_bp.out]"
 gcc demo/nonsensical_ian_numbers.c -o builds/IanNums.out $CFlags $Debug && echo "Finished Building [IanNums.out]" || echo "Build Failed [IanNums.out]"
 gcc demo/loadAndFineTune.c -o builds/FineTuning.out $CFlags $Debug && echo "Finished Building [FineTuning.out]" || echo "Build Failed [FineTuning.out]"
 
-SCENES="src/gui-app/scene_nnBuilder.c src/gui-app/scene_imageRecogniser.c"
+SCENES="src/gui-app/scene_nnBuilder.c src/gui-app/scene_imageRecogniser.c src/gui-app/scene_tData.c"
 gcc src/gui-app/gui-app.c $SCENES -o builds/Stuc.out $CFlags $Raylib $Debug && echo "Finished Building [Stuc.out]" || echo "Build Failed [Stuc.out]"

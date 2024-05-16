@@ -5,10 +5,14 @@
 
 enum {
 	SC_NN_BUILDER,
+	SC_TDATA,
+#ifdef ENABLE_RECOG
 	SC_IMAGE_RECOGNISER,
+#endif // ENABLE_RECOG
 	SC_COUNT
 } Scenes;
 #include "scene_nnBuilder.h"
+#include "scene_tData.h"
 #include "scene_imageRecogniser.h"
 
 #define RAYGUI_IMPLEMENTATION
@@ -52,7 +56,8 @@ int main(void) {
     	int activeVisualStyle = 5;
     	int prevActiveVisualStyle = 5;
 
-	int activeScene = SC_NN_BUILDER;
+	// int activeScene = SC_NN_BUILDER;
+	int activeScene = SC_TDATA;
 
 	size_t leftPad   = 24;
 	size_t layerPad  = 8;
@@ -60,10 +65,17 @@ int main(void) {
 	SetTargetFPS(60);
 
 	const char* styleChooserText 		    = "default;Jungle;Lavanda;Dark;Ashes;Bluish;Cyber;Terminal;Enefete;Sunny;Cherry;Candy"; // STYLE CHOOSER
-	const char* sceneChooserText 		    = "Neural Network Builder;Image Recogniser"; // STYLE CHOOSER
+#ifdef ENABLE_RECOG
+	const char* sceneChooserText 		    = "Neural Network Builder;Training Data;Image Recogniser"; // STYLE CHOOSER
+#else // ENABLE_RECOG
+	const char* sceneChooserText 		    = "Neural Network Builder;Training Data"; // STYLE CHOOSER
+#endif // ENABLE_RECOG
 
 	Scene_nnBuilder scene_nnBuilder = scene_nnBuilderInit();
+	Scene_tData scene_tData = scene_tDataInit();
+#ifdef ENABLE_RECOG
 	Scene_imageRecog scene_imageRecog = scene_imageRecogInit();
+#endif // ENABLE_RECOG
 
 	while (!WindowShouldClose()) {
 		g_screenHeight = (size_t) GetScreenHeight();
@@ -73,7 +85,10 @@ int main(void) {
 		
 		switch (activeScene) {
 		case SC_NN_BUILDER: scene_nnBuilderUpdate(&scene_nnBuilder); break;
+		case SC_TDATA: scene_tDataUpdate(&scene_tData); break;
+#ifdef ENABLE_RECOG
 		case SC_IMAGE_RECOGNISER: scene_imageRecogUpdate(&scene_imageRecog); break;
+#endif // ENABLE_RECOG
 		default: log(ERROR, "Unknown scene %d\n", activeScene);
 		}
 		
@@ -97,6 +112,8 @@ int main(void) {
 				size_t width = 180;
 				Rectangle sceneChooserRec = { g_screenWidth - leftPad - width ,10, width, 24 };
 
+				if (scene_nnBuilder.neuralNetworkPreview.training) { GuiDisable(); GuiLock(); }
+
 				GuiLabel((Rectangle)
 					{ 
 					  g_screenWidth - leftPad - layerPad - sceneChooserRec.width - txtM.x, 
@@ -106,14 +123,19 @@ int main(void) {
 					}
 				, text);
 				GuiComboBox(sceneChooserRec, sceneChooserText, &activeScene);
-				if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && CheckCollisionPointRec(GetMousePosition(), sceneChooserRec)) {
+				if (!GuiIsLocked() && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && CheckCollisionPointRec(GetMousePosition(), sceneChooserRec)) {
 					activeScene = ((activeScene + SC_COUNT) - 1) % SC_COUNT;
 				}
+				GuiEnable();
+				GuiUnlock();
 			}
 
 			switch (activeScene) {
 			case SC_NN_BUILDER: scene_nnBuilderDraw(&scene_nnBuilder); break;
+			case SC_TDATA: scene_tDataDraw(&scene_tData); break;
+#ifdef ENABLE_RECOG
 			case SC_IMAGE_RECOGNISER: scene_imageRecogDraw(&scene_imageRecog); break;
+#endif // ENABLE_RECOG
 			default: log(ERROR, "Unknown scene %d\n", activeScene);
 			} 
 

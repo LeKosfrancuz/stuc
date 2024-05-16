@@ -151,7 +151,7 @@ Stuc_nn loadNetwork(const char* nn_path, bool reset_nn);
 float validateNetwork(Stuc_nn nn, size_t *valid_samples);
 void forwardOperands(Stuc_nn nn, num i, num j);
 void trainNetwork(Stuc_nn nn, const char *nn_path, const size_t batch_size, const size_t epoch_count, float learn_rate, bool save_to_file);
-void useNetwork(Stuc_nn nn);
+void useNetwork(Stuc_nn nn, bool print_raw_data);
 char *shiftArgs(char ***argv, int *argc);
 
 int main(int argc, char **argv) {
@@ -170,6 +170,7 @@ int main(int argc, char **argv) {
 	float  learn_rate  = 1;
 	bool   save_to_file = true;
 	bool   reset_nn = false;
+	bool print_raw_output = false;
 
 	while(argc > 0) {
 		char *curr_arg = shiftArgs(&argv, &argc);
@@ -257,6 +258,10 @@ int main(int argc, char **argv) {
 			}
 			continue;
 		}
+		if (!strcmp(curr_arg, "--raw-output")) {
+			print_raw_output = true;
+			continue;
+		}
 		if (!strcmp(curr_arg, "--help") || !strcmp(curr_arg, "-h")) {
 			printf("\nHelp menu programa za upravljanje neuronskom mrežom Zbrajalo\n\n");
 
@@ -275,6 +280,7 @@ int main(int argc, char **argv) {
 			printf("\t--no-save            - Nakon učenja, neuronska mreža neće se spremiti u file (korisno s modom `use`)\n");
 			printf("\t--nn-path [path]     - Promjena zadane putanje za [path] iz kojeg će se učitavati i u koji će se spremati neuronska mreža\n");
 			printf("\t--reset-nn           - Resetirati će neuronsku mrežu koju učita (isto kao da ne pronađe file)\n");
+			printf("\t--raw-output         - Ispisuje točan podatak koji je dala mreža umjesto da zaokružuje (kod moda use)\n");
 			printf("\t--help ili -h        - prikazuje ovaj meni\n\n");
 
 			printf("\n\nCopyright © 2023. Mateo Kos, pod MIT licencom.\n\n");
@@ -300,7 +306,7 @@ int main(int argc, char **argv) {
 		switch(mode) {
 		case MODE_NONE:  continue;
 		case MODE_COUNT: exit(EXIT_FAILURE);
-		case MODE_USE:   useNetwork(nn); break;
+		case MODE_USE:   useNetwork(nn, print_raw_output); break;
 		case MODE_TRAIN: trainNetwork(nn, nn_path, batch_size, epoch_count, learn_rate, save_to_file); break;
 		case MODE_VALIDATE: {
 				size_t valid_samples;
@@ -344,7 +350,7 @@ Stuc_nn loadNetwork(const char* nn_path, bool reset_nn) {
 	return nn;
 }
 
-void useNetwork(Stuc_nn nn) {
+void useNetwork(Stuc_nn nn, bool print_raw_data) {
 
 	bool should_exit = false;
 	do {
@@ -376,7 +382,19 @@ void useNetwork(Stuc_nn nn) {
 		sum.at.b1 = roundf(STUC_AT_OUTPUT(nn, 1));
 		sum.at.b2 = roundf(STUC_AT_OUTPUT(nn, 2));
 		sum.at.b3 = roundf(STUC_AT_OUTPUT(nn, 3));
-		printf("%u + %u = %u\n", num1.val, num2.val, sum.val);
+		printf("%u + %u = %u", num1.val, num2.val, sum.val);
+
+		if (print_raw_data) {
+			float val = 0;
+			for (size_t i = 0; i < 4; i++) {
+				float_t out = STUC_AT_OUTPUT(nn, 3-i);
+				val += out*(1 << i);
+			}
+			printf(" (%f)", val);
+		}
+
+		printf("\n");
+
 	} while(!should_exit);
 }
 

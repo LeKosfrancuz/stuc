@@ -5,18 +5,7 @@
 #include "external/raymath.h"
 #include "scene_essentials.h"
 
-#define MAX_N_OF_NEURONS       1000000
-#define MAX_N_OF_LAYERS        1000000
-#define MAX_BATCH_SIZE         100000
 struct ErrorPopups g_error_stack = {0};
-
-float tData[] = {
-	0, 0, 0,
-	1, 0, 1,
-	0, 1, 1,
-	1, 1, 0,
-};
-size_t tData_samples = 4;
 
 Scene_nnBuilder scene_nnBuilderInit(void) {
 	Scene_nnBuilder s;
@@ -97,6 +86,7 @@ void scene_nnBuilderUpdate(Scene_nnBuilder *s) {
 
 		log(INFO, "bounding box; width: %.0f, height: %.0f\n", nnp->boundingBox.width, nnp->boundingBox.height);
 		log(INFO, "nnPreview; width: %.0f, dx: %zu\n", nnPreviewWidth, dx);
+		log(INFO, "Input data has %zu samples.\n", tData_samples);
 	}
 
 	if (IsKeyPressed(KEY_R)) {
@@ -110,6 +100,9 @@ void scene_nnBuilderUpdate(Scene_nnBuilder *s) {
 }
 void scene_nnBuilderDraw(Scene_nnBuilder *s) {
 	// Draw controls
+	if (g_error_stack.error_shown) GuiLock();
+	else GuiUnlock();
+
 	drawNeuralNetworkPreview(&s->neuralNetworkPreview, &s->controlPanelGroup);
 	drawCostFunctionPanelGroup(&s->costPanelGroup);
 	if (s->neuralNetworkPreview.training) {
@@ -124,6 +117,7 @@ void drawErrorPopup(void) {
 	if (g_error_stack.count > 0) {
 		g_error_stack.error_shown = true;
 		ErrorPopup *error = &g_error_stack.items[0];
+		GuiUnlock();
 
 		size_t font_size = 40;
 		Vector2 txt_size = MeasureTextEx(GuiGetFont(), error->text, font_size, 1);
@@ -139,7 +133,27 @@ void drawErrorPopup(void) {
 
 		switch (error->opt) {
 		case EOPT_OK: assert(0 && "Not implemented!"); break;
-		case EOPT_YES_NO: assert(0 && "Not implemented!"); break;
+		case EOPT_YES_NO: {
+			int ret = GuiMessageBox(
+				(Rectangle){ 
+					g_screenWidth/2.0 - 0.15*g_screenWidth, 
+					g_screenHeight/2.0 - 0.10*g_screenHeight, 
+					0.30*g_screenWidth, 
+					0.20*g_screenHeight
+				}, 
+				"Do you wish to abort?", error->text, "YES;NO"
+			);
+			if (ret == 1) { // "YES"
+				log(INFO, "Error resolved!\n");
+				error->resolve();
+			}
+			if (ret != -1) {
+				g_error_stack.error_shown = false;
+				log(INFO, "REMOVED Error: %s.\n", error->text);
+				free(error->text);
+				da_remove(&g_error_stack, 0);
+			}
+		} break;
 		case EOPT_OK_CANCLE: assert(0 && "Not implemented!"); break;
 		case EOPT_TIME: {
 			DrawRectangleRounded(popup_rect, 0.3, 15, WHITE);
@@ -176,6 +190,18 @@ void push_time_warn(const char *str, double time_sec)  {
 	error.opt = EOPT_TIME;
 	error.text = dup_str;
 	error.waitTimeSec = time_sec;
+	error.error_level = ELEVEL_WARN;
+	da_append(&g_error_stack, error);
+}
+
+void push_yesno_warn(const char *str, void (*resolve)(void))  {
+	log(WARN, "%s\n", str);
+	char *dup_str = calloc(256, 1);
+	dup_str = memcpy(dup_str, str, 256);
+	ErrorPopup error = {0};
+	error.opt = EOPT_YES_NO;
+	error.text = dup_str;
+	error.resolve = resolve;
 	error.error_level = ELEVEL_WARN;
 	da_append(&g_error_stack, error);
 }
@@ -327,6 +353,10 @@ void drawControlPanelGroup(ControlPanelGroup *cpg, NeuralNetworkPreview *nnp, Co
 			}
 		}
 	}
+	
+	if (CheckCollisionPointRec(GetMousePosition(), cpg->learnRateSB)) SetMouseCursor(MOUSE_CURSOR_RESIZE_EW);
+	else SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+
 	GuiSliderBar(   cpg->learnRateSB,	 cpg->learnRateText, NULL, &cpg->learnRateValue, 0, 100);
 	GuiToggle(cpg->toggleTrainBT, cpg->trainingToggleText, &nnp->training);
 
@@ -439,6 +469,8 @@ NeuralNetworkPreview initNeuralNetworkPreview(void) {
 	return nnp;
 }
 
+int g_resolved = -1;
+void setResolve(void) { g_resolved = true; }
 void updateNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cpg) {
 	// nnp->boundingBox.width = 0.55 * g_screenWidth;
 	if (!nnp->training) {
@@ -449,6 +481,7 @@ void updateNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cp
 			nnp->learning_enabled = false;
 			nnp->learning_paused = false;
 			nnp->epoch_count = 0;
+			g_resolved = -1;
 			log(INFO, "NN dealloced!\n");
 		}
 
@@ -513,6 +546,20 @@ void updateNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cp
 			nnp->training = false;
 			return;
 		}
+
+		if (tData_samples == 0 && g_resolved == -1 && g_error_stack.count == 0) {
+			g_resolved = false;
+			push_yesno_warn("Training Data is not defined!", setResolve);
+		} else if (tData_samples > 0) g_resolved = false;
+
+		if (g_resolved) {
+			nnp->training = false;
+			g_resolved = -1;
+			return;
+		} else if (g_error_stack.count > 0) { return; };
+
+		g_resolved = true;
+
 
 		for (size_t i = 1; i < cpg->layers.count; i++) {
 			arch[i] = cpg->layers.items[i].nOfNeurons;			
@@ -680,7 +727,7 @@ void drawCheckResultGroup(CheckResultGroup *crg, NeuralNetworkPreview *nnp) {
 		for (size_t i = 0; i < tData_samples; i++) {
 			Vector2 pos = {crg->resultsRect.x, crg->resultsRect.y+layer_padding*i + top_padding};
 			for (size_t j = 0; j < STUC_NN_INPUT(*nnp->nn).cols; j++) {
-				pos.x += element_padding*j;
+				pos.x += element_padding;
 				DrawTextEx(font, TextFormat("%.0f", STUC_MAT_AT(nnp->tInput, i, j)), pos, txt_size, txt_space, txt_colour);
 				STUC_AT_INPUT(*nnp->nn, j) = STUC_MAT_AT(nnp->tInput, i, j);
 			}
