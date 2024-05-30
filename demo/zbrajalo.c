@@ -144,7 +144,7 @@ typedef enum {
 bool nnRezEq(float a, float b) {
 	if (isnan(a) || isnan(b)) return false;
 	if ((int)roundf(a) == (int)roundf(b)) return true;
-	return false;	
+	return false;
 }
 
 Stuc_nn loadNetwork(const char* nn_path, bool reset_nn);
@@ -322,7 +322,7 @@ int main(int argc, char **argv) {
 }
 
 Stuc_nn loadNetwork(const char* nn_path, bool reset_nn) {
-	
+
 	Stuc_nn nn;
 	uint8_t file_ret = 0;
 
@@ -408,7 +408,7 @@ float validateNetwork(Stuc_nn nn, size_t *valid_samples) {
 		for (num j = {0}; j.val < 16; j.val++) {
 		    num sum = { .val = i.val + j.val};
 		    if (sum.at.of == 0) {
-			bool valid = true;    
+			bool valid = true;
 			forwardOperands(nn, i, j);
 
 			valid &= nnRezEq((float)sum.at.b0, STUC_AT_OUTPUT(nn, 0));
@@ -458,7 +458,7 @@ void trainNetwork(Stuc_nn nn, const char *nn_path, const size_t batch_size, cons
 #ifdef BACKPROP
 			float_t boostMultiplier = 1;
 			stuc_nnBackpropNoAlloc(nn, gdMap, tInput, tOutput, boostMultiplier);
-#else 
+#else
 #error "Nije definirana metoda ucenja, definirati sa -D[ime_metode]"
 #endif
 #endif
@@ -466,9 +466,9 @@ void trainNetwork(Stuc_nn nn, const char *nn_path, const size_t batch_size, cons
 
 
 			if (i % batch_size == 0) {
-				printf("cost = %.32f                          \n", 
+				printf("cost = %.32f                          \n",
 					stuc_nnCost(nn, tInput, tOutput));
-			} 
+			}
 
 			if (batch_size < 4 || i % (batch_size / 4) == 1) {
 				printf("Traning Neural Network Model: %.2f%%\r",

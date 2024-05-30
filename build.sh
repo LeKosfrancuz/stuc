@@ -3,8 +3,8 @@ CFlags=" -O3 -Wall -Wextra -pedantic -Wstrict-prototypes -Wold-style-definition 
 Raylib="-L./src/gui-app/external/lib -lraylib -I./src/gui-app/external"
 Debug=""
 argc=$#
-if [ $argc -eq 1 ] && [ $1 = "dbg" ] 
-then 
+if [ $argc -eq 1 ] && [ $1 = "dbg" ]
+then
 	# za debug u gdb-u, gf2 i sl.
 	Debug="-O0 -ggdb3 -fsanitize=address,undefined"
 fi
@@ -22,7 +22,7 @@ make remake_release_path
 make -j10
 popd
 
-echo 
+echo
 echo -e "\x1B[37;1mBuilding Demos\x1B[37;0m"
 
 [ ! -d "./builds/" ] && mkdir "./builds/"

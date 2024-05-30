@@ -21,7 +21,7 @@ float cost(float w) {
 	for (int i = 0; i < sampleCount; i++) {
 		int x = tData[i][0];
 		int y = tData[i][1];
-		
+
 		float dif = y - x*w;
 		modelCost += dif*dif;
 	}
@@ -34,7 +34,7 @@ float randFloat() {
 }
 
 int main() {
-	
+
 	// y = x * w
 	srand(time(0));
 	float w = randFloat() * 5;

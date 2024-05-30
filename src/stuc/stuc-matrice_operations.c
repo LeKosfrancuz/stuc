@@ -94,11 +94,11 @@ void stuc__matAddSub(Stuc_mat a, Stuc_mat b, int addSub) {
 	STUC_ASSERT(addSub == 1 || addSub == -1);
 	STUC_ASSERT(a.rows == b.rows);
 	STUC_ASSERT(a.cols == b.cols);
-	
+
 	for (size_t i = 0; i < a.rows; i++)
 		for (size_t j = 0; j < a.cols; j++)
 			STUC_MAT_AT(a, i, j) += STUC_MAT_AT(b, i, j) * addSub;
-	
+
 	return;
 }
 
@@ -117,19 +117,19 @@ void stuc_matSub(Stuc_mat a, Stuc_mat b) {
 void stuc_matCpy(Stuc_mat dst, Stuc_mat src) {
 	stuc_matFill(dst, 0);
 	stuc__matAddSub(dst, src, 1);
-	
+
 	return;
 }
 
 bool stuc_matEq(Stuc_mat a, Stuc_mat b) {
 	if (a.rows != b.rows) return false;
 	if (a.cols != b.cols) return false;
-	
+
 	for (size_t i = 0; i < a.rows; i++)
 		for (size_t j = 0; j < a.cols; j++)
 			if (STUC_MAT_AT(a, i, j) != STUC_MAT_AT(b, i, j))
 				return false;
-	
+
 	return true;
 }
 
@@ -151,7 +151,7 @@ void stuc_matDot(Stuc_mat dest, Stuc_mat a, Stuc_mat b) {
 void stuc__matActivate(Stuc_nn nn, size_t layer, size_t neuron) {
 	float_t (*activation)(float_t) = &stuc__sigmoid;
 	bool softmax = false;
-	
+
 	switch(STUC_NN_AT(nn, layer).activation) {
 		case STUC_ACTIVATE_RELU:    activation = &stuc__relu;    break;
 		case STUC_ACTIVATE_SIGMOID: activation = &stuc__sigmoid; break;

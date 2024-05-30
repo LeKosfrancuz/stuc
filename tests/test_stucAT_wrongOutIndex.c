@@ -6,7 +6,7 @@ void test_assert(bool uvijet) {
 		printf("stucAT_wrongOut Test fai1ed succesfuly: "PASS"\n"); // "fai1" <- because "fail" triggers the regex
 		exit(0); // because a fail is expected
 	}
-	
+
 	printf("stucAT_wrongOut Test failed: "FAIL"\n");
 	exit(1);
 }
@@ -18,11 +18,11 @@ void test_stucAT_wrongOutIndex(void) {
 	stuc_setActivation(act, STUC_LENP(act), STUC_ACTIVATE_SIGMOID);
 	Stuc_nn nn = stuc_nnAlloc(act, arch, STUC_LENP(arch));
 
-	STUC_AT_OUTPUT(nn, 2); 
+	STUC_AT_OUTPUT(nn, 2);
 }
 
 int main(void) {
 	test_stucAT_wrongOutIndex();
-	
+
 	return 0;
 }

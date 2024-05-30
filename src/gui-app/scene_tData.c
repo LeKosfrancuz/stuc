@@ -17,14 +17,14 @@ size_t tData_samples = 0;
 #define SET_FONT_SIZE(size) GuiSetStyle(DEFAULT, TEXT_SIZE, fmax(0, (int)(size)))
 #define CURR_FONT_SIZE GuiGetStyle(DEFAULT, TEXT_SIZE)
 
-int best_font_size(char *text, float width, float height) { 
+int best_font_size(char *text, float width, float height) {
 	int curr_size = CURR_FONT_SIZE;
 	const float lower_limit = 4.0/10.0;
 	const float middle_limit = 9.0/10.0;
 	const float upper_limit = 2.0;
 
 	for (size_t __iter = 0; __iter < 20; __iter++) {
-		
+
 		Vector2 txt_size = MeasureTextEx(GuiGetFont(), text, curr_size, GuiGetStyle(DEFAULT, TEXT_SPACING));
 		if (txt_size.x > upper_limit*width) curr_size -= 4;
 		else if (txt_size.x > width) curr_size--;
@@ -89,9 +89,9 @@ void scene_tDataDraw(Scene_tData *s) {
 	SET_FONT_SIZE(size);
 
 	Rectangle bounds = {
-		s->sample_area_rect.x - 7, 
-		s->sample_area_rect.y, 
-		s->sample_area_rect.width + 14, 
+		s->sample_area_rect.x - 7,
+		s->sample_area_rect.y,
+		s->sample_area_rect.width + 14,
 		fmin(s->sample_area_rect.height, 4*s->sample_height)
 	};
 	Rectangle view = bounds;
@@ -99,18 +99,18 @@ void scene_tDataDraw(Scene_tData *s) {
 		GuiScrollPanel(bounds, "Sample data", s->sample_area_rect, &scroll, &view);
 	}
 	BeginScissorMode(
-		view.x, 
-		view.y, 
-		view.width, 
+		view.x,
+		view.y,
+		view.width,
 		view.height
 	);
 		// DrawRectangleRec(s->sample_area_rect, MAROON);
 		for (size_t i = 0; i < s->td.count; i++) {
 			size_t sample_cnt = s->td.items[i].count;
 			Rectangle samples = {
-				view.x + s->l_pad, 
-				view.y + (s->sample_height+ s->layer_pad)*i + scroll.y, 
-				view.width - s->l_pad - s->r_pad, 
+				view.x + s->l_pad,
+				view.y + (s->sample_height+ s->layer_pad)*i + scroll.y,
+				view.width - s->l_pad - s->r_pad,
 				s->sample_height
 			};
 
@@ -126,12 +126,12 @@ void scene_tDataDraw(Scene_tData *s) {
                                         samples.width / sample_cnt - (float)(s->l_pad + s->r_pad)/sample_cnt,
 					samples.height,
 				};
-				
+
 				float temp = item.val;
 				int decimals = 0;
 				do {
 					temp -= (int)temp;
-				
+
 				        if (temp > 0) decimals++;
 
 					temp *= 10;
@@ -142,16 +142,16 @@ void scene_tDataDraw(Scene_tData *s) {
 				int font_size = best_font_size(txt, sample.width, sample.height);
 				if (GuiTextBox(sample, txt, font_size, item.edit_mode)) {
 					s->td.items[i].items[j].edit_mode = !item.edit_mode;
-				}	
+				}
 				if(sscanf(txt, "%f ", &s->td.items[i].items[j].val) != 1) {
 					if (errno == 0) errno = EINVAL;
 					log(ERROR, "Greška pri čitanju broja opcije ulaza %zu retka %zu : %s", j, i, strerror(errno));
 				}
 
 				DrawLineEx(
-					(Vector2) {samples.x + s->td.ins*(samples.width/sample_cnt), view.y}, 
-					(Vector2) {samples.x + s->td.ins*(samples.width/sample_cnt), view.y + view.height}, 
-					2, 
+					(Vector2) {samples.x + s->td.ins*(samples.width/sample_cnt), view.y},
+					(Vector2) {samples.x + s->td.ins*(samples.width/sample_cnt), view.y + view.height},
+					2,
 					SC_PRESS_TEXT
 			        );
 			}
@@ -161,7 +161,7 @@ void scene_tDataDraw(Scene_tData *s) {
 			if (GuiButton(button_rec, ICON_TO_TEXT(ICON_BIN))) {
 				da_remove(&s->td, i);
 			}
-			
+
 		}
 	EndScissorMode();
 
@@ -212,12 +212,12 @@ void scene_tDataDraw(Scene_tData *s) {
 
 	if (error) {
 		int ret = GuiMessageBox(
-			(Rectangle){ 
-				g_screenWidth/2.0 - 0.15*g_screenWidth, 
-				g_screenHeight/2.0 - 0.10*g_screenHeight, 
-				0.30*g_screenWidth, 
+			(Rectangle){
+				g_screenWidth/2.0 - 0.15*g_screenWidth,
+				g_screenHeight/2.0 - 0.10*g_screenHeight,
+				0.30*g_screenWidth,
 			        0.20*g_screenHeight
-			}, 
+			},
 			"Operacija prekinuta!", "Potrebno je dodati ulazne podatke", "OK"
 		);
 		if (ret != -1) error = false;
@@ -233,31 +233,31 @@ void scene_tDataUpdate(Scene_tData *s) {
 
 	s->top_tools_rect = (Rectangle) {s->l_pad, s->top_pad, g_screenWidth - s->l_pad - s->r_pad, g_screenHeight*0.12};
 	s->input_spinner_rect = (Rectangle){
-		s->top_tools_rect.x + s->top_tools_rect.width/4, 
-		s->top_tools_rect.y, 
-		0.25*s->top_tools_rect.width - s->r_pad, 
+		s->top_tools_rect.x + s->top_tools_rect.width/4,
+		s->top_tools_rect.y,
+		0.25*s->top_tools_rect.width - s->r_pad,
 		s->top_tools_rect.height
 	};
 
 	s->output_spinner_rect = (Rectangle){
-		s->top_tools_rect.x + 3*s->top_tools_rect.width/4, 
-		s->top_tools_rect.y, 
-		0.25*s->top_tools_rect.width - s->r_pad, 
+		s->top_tools_rect.x + 3*s->top_tools_rect.width/4,
+		s->top_tools_rect.y,
+		0.25*s->top_tools_rect.width - s->r_pad,
 		s->top_tools_rect.height
 	};
 
 	s->sample_height = 0.12*g_screenHeight;
 	s->sample_area_rect = (Rectangle) {
-		s->l_pad, 
-		s->top_tools_rect.y + s->top_tools_rect.height + s->layer_pad, 
-		g_screenWidth - s->l_pad - s->r_pad, 
+		s->l_pad,
+		s->top_tools_rect.y + s->top_tools_rect.height + s->layer_pad,
+		g_screenWidth - s->l_pad - s->r_pad,
 		(s->sample_height + s->layer_pad) * s->td.count,
 	};
 
 	s->bot_tools_rect = (Rectangle) {
-		s->l_pad, 
-		s->sample_area_rect.y + fmin(s->sample_area_rect.height, 4*s->sample_height) + s->layer_pad, 
-		g_screenWidth - s->l_pad - s->r_pad, 
+		s->l_pad,
+		s->sample_area_rect.y + fmin(s->sample_area_rect.height, 4*s->sample_height) + s->layer_pad,
+		g_screenWidth - s->l_pad - s->r_pad,
 		g_screenHeight*0.12,
 	};
 

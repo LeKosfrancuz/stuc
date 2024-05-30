@@ -25,7 +25,7 @@ TESTS="$TESTS matDot_Redosljed matDot_RazliciteVelicine matRow_tocnostKopiranja 
 TESTS="$TESTS stucAT_input stucAT_output stucAT_wrongInIndex stucAT_wrongOutIndex stucAT_funcArgOutput"
 
 echo -e "${B}Building Tests...$N\n"
-for i in $TESTS; do 
+for i in $TESTS; do
     gcc test_${i}.c -o build/test_${i} ../src/stuc/libstuc.a -lm -ggdb && echo -e "Built test [$C$i$N] ${S}succesfuly$N" || echo -e "${F}Failed$N to build test [$C$i$N]"
 done
 

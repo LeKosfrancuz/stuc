@@ -18,11 +18,11 @@ void test_stucAT_wrongInIndex(void) {
 	stuc_setActivation(act, STUC_LENP(act), STUC_ACTIVATE_SIGMOID);
 	Stuc_nn nn = stuc_nnAlloc(act, arch, STUC_LENP(arch));
 
-	STUC_AT_INPUT(nn, 2) = 0; 
+	STUC_AT_INPUT(nn, 2) = 0;
 }
 
 int main(void) {
 	test_stucAT_wrongInIndex();
-	
+
 	return 0;
 }

@@ -2,8 +2,8 @@
 CFlags=" -O3 -Wall -Wextra -pedantic -Wstrict-prototypes -Wold-style-definition -std=c99 -lm"
 Debug=""
 argc=$#
-if [ $argc -eq 1 ] && [ $1 = "dbg" ] 
-then 
+if [ $argc -eq 1 ] && [ $1 = "dbg" ]
+then
 	# za debug u gdb-u, gf2 i sl.
 	Debug="-O0 -ggdb3 "
 	#-fsanitize=address,undefined"

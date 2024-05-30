@@ -44,7 +44,7 @@ void scene_nnBuilderUpdate(Scene_nnBuilder *s) {
 	} else {
 		s->aY.s1 += s->controlPanelGroup.boundingBox.height + innerLayerPad;
 	}
-	
+
 	{
 		size_t width = g_screenWidth - (s->aX.l1 + rightPad);
 		size_t height= fmax(0.25 * g_screenHeight, layer1_min);
@@ -60,7 +60,7 @@ void scene_nnBuilderUpdate(Scene_nnBuilder *s) {
 	s->aX.l2 += s->neuralNetworkPreview.boundingBox.width + layerPad;
 
 	s->aY.s2 += s->controlPanelGroup.boundingBox.height + innerLayerPad;
-	
+
 	if (s->neuralNetworkPreview.training) {
 		s->checkResultGroup.boundingBox = (Rectangle) { s->aX.l2, s->aY.s2, g_screenWidth - (s->aX.l2 + rightPad), g_screenHeight - (s->aY.s2 + bottomPad) }; //GroupBox: provjeraRezultata
 	}
@@ -135,12 +135,12 @@ void drawErrorPopup(void) {
 		case EOPT_OK: assert(0 && "Not implemented!"); break;
 		case EOPT_YES_NO: {
 			int ret = GuiMessageBox(
-				(Rectangle){ 
-					g_screenWidth/2.0 - 0.15*g_screenWidth, 
-					g_screenHeight/2.0 - 0.10*g_screenHeight, 
-					0.30*g_screenWidth, 
+				(Rectangle){
+					g_screenWidth/2.0 - 0.15*g_screenWidth,
+					g_screenHeight/2.0 - 0.10*g_screenHeight,
+					0.30*g_screenWidth,
 					0.20*g_screenHeight
-				}, 
+				},
 				"Do you wish to abort?", error->text, "YES;NO"
 			);
 			if (ret == 1) { // "YES"
@@ -231,14 +231,14 @@ ControlPanelGroup initControlPanelGroup(void) {
 	cpg.activationLookup[2] = STUC_ACTIVATE_SOFTMAX;
 	cpg.activationLookup[3] = STUC_ACTIVATE_TANH;
 	cpg.activationLookup[4] = STUC_ACTIVATE_SIN;
-	
+
 	cpg.layerChoiceCurrent              = 0;            // ToggleGroup: layerChoice
 	cpg.activationFunctionChoiceCurrent = 0;            // ComboBox:    activationChoice
 	cpg.nOfNeuronsEditMode              = false;        // Spinner:     nOfNeurons
 	cpg.layerChoiceEditMode             = false;        // GuiLayerSelector
 	cpg.nOfNeuronsValue                 = 0;            // Spinner:     nOfNeurons
 	cpg.learnRateValue                  = 0.5f;         // SliderBar:   learnRate
-	
+
 	return cpg;
 }
 
@@ -250,18 +250,18 @@ void updateControlPanelGroup(ControlPanelGroup *cpg, NeuralNetworkPreview *nnp, 
 	size_t sX = cpg->boundingBox.x + leftPad;
 	size_t controlsWidth = cpg->boundingBox.width - (leftPad + rightPad);
 	size_t btn = cpg->layerChoiceTG.height;
-	
+
 	size_t sY = 64;
 	size_t spacing = 32;
 	if (!nnp->learning_enabled){
 		cpg->layerL 		 = (Rectangle){ sX - 42,  sY,  40,  24 };			    // Label: layerLabel
 		cpg->activationL 	 = (Rectangle){ sX - 65,  sY + spacing, 56, 24 };		    // Label: activationLabel
 		cpg->layerChoiceTG  	 = (Rectangle){ sX, sY, controlsWidth - btn - rightPad, 24 };	    // ToggleGroup: layerChoice
-		
+
 		sX +=  controlsWidth - btn;
 			cpg->removeLayerBT = (Rectangle){ sX, sY, btn, btn };  // Remove layer button
 		sX -=  controlsWidth - btn;
-		
+
 		sY += spacing;
 		cpg->activationChoiceCB  = (Rectangle){ sX, sY, controlsWidth,       24 }; sY += spacing; // ComboBox: activationFunctionChoice
 		cpg->nOfNeuronsS  	 = (Rectangle){ sX, sY, controlsWidth,       24 }; sY += spacing; // Spinner: numberOfNeurons
@@ -304,26 +304,26 @@ void updateControlPanelGroup(ControlPanelGroup *cpg, NeuralNetworkPreview *nnp, 
 			cpg->activationFunctionChoiceCurrent = cpg->layers.items[cpg->layerSelectedCurrent].activation;
 		}
 	}
-		
+
 	return;
 }
 
 void drawControlPanelGroup(ControlPanelGroup *cpg, NeuralNetworkPreview *nnp, CostFunctionPanelGroup *cfpg) {
 
 	GuiGroupBox(    cpg->boundingBox,	 cpg->controlPanelText);
-	
+
 	if (!nnp->learning_enabled) {
-		if (GuiSpinner( cpg->layerChoiceTG, NULL, 
+		if (GuiSpinner( cpg->layerChoiceTG, NULL,
 				     &cpg->layerChoiceCurrent, 1, MAX_N_OF_LAYERS, cpg->layerChoiceEditMode)) {
 			cpg->layerChoiceEditMode = !cpg->layerChoiceEditMode;
-		} 
+		}
 		if (GuiButton(cpg->removeLayerBT, ICON_TO_TEXT(ICON_BIN))) {
 			cpg->removeCurrLayer = true;
 		}
 
 		GuiComboBox(    cpg->activationChoiceCB, cpg->activationFunctionChoiceText, &cpg->activationFunctionChoiceCurrent);
-		if (GuiSpinner( cpg->nOfNeuronsS,	 cpg->numberOfNeuronsText, 
-				&cpg->nOfNeuronsValue, 0, MAX_N_OF_NEURONS, cpg->nOfNeuronsEditMode)) 
+		if (GuiSpinner( cpg->nOfNeuronsS,	 cpg->numberOfNeuronsText,
+				&cpg->nOfNeuronsValue, 0, MAX_N_OF_NEURONS, cpg->nOfNeuronsEditMode))
 				cpg->nOfNeuronsEditMode = !cpg->nOfNeuronsEditMode;
 		GuiLabel(       cpg->layerL,		 cpg->layerLabelText);
 		GuiLabel(       cpg->activationL,	 cpg->activationLabelText);
@@ -345,15 +345,15 @@ void drawControlPanelGroup(ControlPanelGroup *cpg, NeuralNetworkPreview *nnp, Co
 		if ((cpg->boundingBox.y + cpg->boundingBox.height) - (cpg->saveToFileBT.y + cpg->saveToFileBT.height) > 0) {
 			if (GuiButton(cpg->saveToFileBT, cpg->saveToFileText)) {
 				uint8_t ret = stuc_nnSaveToFile(*nnp->nn, RESOURCES_PATH"saved_nn.snn");
-				if (ret) { 
-					stuc_printIOFlags(ret); 
+				if (ret) {
+					stuc_printIOFlags(ret);
 					return;
 				}
 				push_time_warn("NN saved to file, succesfully", 2);
 			}
 		}
 	}
-	
+
 	if (CheckCollisionPointRec(GetMousePosition(), cpg->learnRateSB)) SetMouseCursor(MOUSE_CURSOR_RESIZE_EW);
 	else SetMouseCursor(MOUSE_CURSOR_DEFAULT);
 
@@ -378,15 +378,15 @@ CostFunctionPanelGroup initCostFunctionPanelGroup(void) {
 
 void drawCostFunctionPanelGroup(CostFunctionPanelGroup *cfpg) {
 
-	if (cfpg->isShown) { 
+	if (cfpg->isShown) {
 		Rectangle costFunctionRec = cfpg->boundingBox;
-		GuiGroupBox(costFunctionRec, cfpg->costFunctionText); 
+		GuiGroupBox(costFunctionRec, cfpg->costFunctionText);
 
 		size_t exitButtonWidth = 16;
-		Rectangle exitButtonRec = { 
-					costFunctionRec.x + costFunctionRec.width - exitButtonWidth, 
-					costFunctionRec.y, 
-					exitButtonWidth, 
+		Rectangle exitButtonRec = {
+					costFunctionRec.x + costFunctionRec.width - exitButtonWidth,
+					costFunctionRec.y,
+					exitButtonWidth,
 					exitButtonWidth
 				       };
 
@@ -418,8 +418,8 @@ void drawCostFunctionPanelGroup(CostFunctionPanelGroup *cfpg) {
 		Color textColor = SC_NORML_TEXT;
 
 		Vector2   textPosition   = {
-				  buttonPosition.width - (buttonPosition.width - textMeasure.y) / 2, 
-				  buttonPosition.y + buttonPosition.height / 2 - textMeasure.x / 2 
+				  buttonPosition.width - (buttonPosition.width - textMeasure.y) / 2,
+				  buttonPosition.y + buttonPosition.height / 2 - textMeasure.x / 2
 				};
 		Vector2   rotationPoint  = { 0, 0 };
 
@@ -490,7 +490,7 @@ void updateNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cp
 				cpg->layerChoiceCurrent--;
 			}
 		}
-		
+
 		if (IsKeyPressed(KEY_RIGHT)) {
 			if ((size_t)cpg->layerSelectedCurrent < MAX_N_OF_LAYERS) {
 				cpg->layerChoiceCurrent++;
@@ -562,8 +562,8 @@ void updateNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cp
 
 
 		for (size_t i = 1; i < cpg->layers.count; i++) {
-			arch[i] = cpg->layers.items[i].nOfNeurons;			
-			act[i-1] = cpg->activationLookup[cpg->layers.items[i-1].activation];			
+			arch[i] = cpg->layers.items[i].nOfNeurons;
+			act[i-1] = cpg->activationLookup[cpg->layers.items[i-1].activation];
 
 
 			if (arch[i] == 0) {
@@ -614,7 +614,7 @@ void drawNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cpg)
 	}
 
 	if (max_neurons == 0) return;
-	
+
 	size_t layerCount = cpg->layers.count;
 	float neuronSize = 50;
 	float nBottmPad = 3 * neuronSize;
@@ -622,7 +622,7 @@ void drawNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cpg)
 	float neuronMapInnerWidth = neuronSize*(layerCount - 1) + nRightPad*(layerCount - 1);
 	float neuronMapInnerHeight = neuronSize*max_neurons + nBottmPad*(max_neurons - 1);
 	/*
-	 * This is the width of the neuron map calculated from the circle centers instead of 
+	 * This is the width of the neuron map calculated from the circle centers instead of
 	 * boxes arround them. The real width is this width + 2*neuronSize
 	 */
 
@@ -650,10 +650,10 @@ void drawNeuralNetworkPreview(NeuralNetworkPreview *nnp, ControlPanelGroup *cpg)
 	if ((layerCount > 0 && cpg->layers.items[0].nOfNeurons >= 1) || layerCount > 1) {
 		DrawRectangleRec(nnp->boundingBox, SC_NORML_BASE);
 
-		size_t focusBar_originX = dx + cpg->layerSelectedCurrent*(neuronSize + nRightPad) - neuronSize - nRightPad/2; 
-		size_t focusBar_originY = nnp->boundingBox.y; 
-		size_t focusBar_width   = 2*neuronSize + nRightPad; 
-		size_t focusBar_height  = nnp->boundingBox.height; 
+		size_t focusBar_originX = dx + cpg->layerSelectedCurrent*(neuronSize + nRightPad) - neuronSize - nRightPad/2;
+		size_t focusBar_originY = nnp->boundingBox.y;
+		size_t focusBar_width   = 2*neuronSize + nRightPad;
+		size_t focusBar_height  = nnp->boundingBox.height;
 		DrawRectangle(focusBar_originX, focusBar_originY, focusBar_width, focusBar_height, SC_FOCUS_BASE);
 	}
 
@@ -708,11 +708,11 @@ void updateCheckResultGroup(CheckResultGroup *crg, size_t layerPad, size_t inner
 }
 void drawCheckResultGroup(CheckResultGroup *crg, NeuralNetworkPreview *nnp) {
 	GuiGroupBox(crg->boundingBox,  crg->provjeraRezultataText);
-	GuiToggleGroup( crg->provjeraRezToggleRect,  
-		// TextFormat("%sTEKST", ICON_TO_TEXT(ICON_FILETYPE_TEXT)), 
-		TextFormat("%sTEKST;%sSLIKA", 
-			ICON_TO_TEXT(ICON_FILETYPE_TEXT), 
-			ICON_TO_TEXT(ICON_FILETYPE_IMAGE)), 
+	GuiToggleGroup( crg->provjeraRezToggleRect,
+		// TextFormat("%sTEKST", ICON_TO_TEXT(ICON_FILETYPE_TEXT)),
+		TextFormat("%sTEKST;%sSLIKA",
+			ICON_TO_TEXT(ICON_FILETYPE_TEXT),
+			ICON_TO_TEXT(ICON_FILETYPE_IMAGE)),
 		&crg->nacinProvjereRezultataActive);
 
 	if (crg->nacinProvjereRezultataActive == 0) {
@@ -757,19 +757,19 @@ void drawCheckResultGroup(CheckResultGroup *crg, NeuralNetworkPreview *nnp) {
 			for (size_t j = 0; j < STUC_NN_INPUT(*nnp->nn).cols; j++) {
 				STUC_AT_INPUT(*nnp->nn, j) = STUC_MAT_AT(nnp->tInput, i, j);
 			}
-			
+
 			stuc_nnForward(*nnp->nn);
 
 
 			for (size_t k = 0; k < outputs; k++) {
 				Vector2 pos = {
-					crg->resultsRect.x + block_w*k + k*padding, 
+					crg->resultsRect.x + block_w*k + k*padding,
 					crg->resultsRect.y + block_h*i + i*padding
 				};
 
 				float_t out = STUC_AT_OUTPUT(*nnp->nn, k);
 				float_t expected = STUC_MAT_AT(nnp->tOutput, i, k);
-				
+
 				Color block_colour = Fade(SC_NORML_TEXT, fabs(out/expected));
 				DrawRectangleV(pos, (Vector2) {block_w, block_h}, block_colour);
 			}

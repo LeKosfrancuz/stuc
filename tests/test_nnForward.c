@@ -4,7 +4,7 @@ bool test_nnForward(void) {
 	Stuc_mat a[] = {stuc_matAlloc(1, 2), stuc_matAlloc(1, 1)};
 	Stuc_mat w1 = stuc_matAlloc(2, 1);
 	Stuc_mat b1 = stuc_matAlloc(1, 1);
-	
+
 	Stuc_nnLayer layers[] = {{STUC_ACTIVATE_SIGMOID, w1, b1, a[0]}, {STUC_ACTIVATE_SIGMOID, w1, b1, a[1]}};
 
 	Stuc_nn nn = {NULL, NULL, 2, layers};
@@ -32,7 +32,7 @@ bool test_nnForward(void) {
 
 		}
 	}
-	
+
 	stuc_matFree(a[0]);
 	stuc_matFree(a[1]);
 	stuc_matFree(w1);
@@ -45,6 +45,6 @@ int main(void) {
 	bool pass = test_nnForward();
 
 	printf("Forward Test: %s\n", pass ? PASS : FAIL);
-	
+
 	return 0;
 }

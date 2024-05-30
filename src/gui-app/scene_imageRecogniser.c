@@ -40,7 +40,7 @@ Scene_imageRecog scene_imageRecogInit(void) {
 	int number_of_samples = parseTrainData(&cats);
 	const int real_img_w = cats.items[0].images.items[0].width;
 	if (real_img_w != img_w) {
-		log(ERROR, "Slike nisu dimenzija %dx%d već %dx%d", 
+		log(ERROR, "Slike nisu dimenzija %dx%d već %dx%d",
 			      img_w, img_w, real_img_w, cats.items[0].images.items[0].height);
 		// TODO: resizing
 		exit(EXIT_FAILURE);
@@ -78,7 +78,7 @@ void randomiseInputData(Scene_imageRecog *s) {
 			ImageRotate(&img, 14*(float)rand()/RAND_MAX);
 			ImageColorContrast(&img, 1.5);
 			Rectangle crop = {img.width/2.0 - 14, img.height/2.0 - 14, img_w, img_w};
-			ImageCrop(&img, crop); 
+			ImageCrop(&img, crop);
 
 			number_of_samples--;
 			uint8_t* data = img.data;
@@ -135,7 +135,7 @@ void scene_imageRecogDraw(Scene_imageRecog *s) {
 		Rectangle canvasRect = {50, 100, s->canvas.width, s->canvas.width};
 		DrawTexture(s->canvas_texture, canvasRect.x, canvasRect.y, WHITE);
 		return;
-	} 
+	}
 
 	{
 		DrawText("Draw", 50, 50, 25, SC_NORML_TEXT);
@@ -153,7 +153,7 @@ void scene_imageRecogDraw(Scene_imageRecog *s) {
 		}
 		DrawTexture(s->canvas_texture, canvasRect.x, canvasRect.y, WHITE);
 	}
-	
+
 	// ImageResize(&s->cats.items[0].images.items[2], 500, 500);
 	// DrawTexture(LoadTextureFromImage(s->cats.items[0].images.items[2]), 100, 100, WHITE);
 }
@@ -164,7 +164,7 @@ int parseTrainData(Categories *cats) {
 	struct dirent *in_dir;
 	char *tData_path = MODEL_DATA_PATH "training_data/";
 
-	if (NULL == (dir = opendir(tData_path))) 
+	if (NULL == (dir = opendir(tData_path)))
     	{
 		log(ERROR, "Failed to open input directory: %s\n", strerror(errno));
 		return false;
@@ -189,7 +189,7 @@ int parseTrainData(Categories *cats) {
 		struct dirent *in_file;
 		char full_path[512];
 		snprintf(full_path, 512, "%s%s/", tData_path, in_dir->d_name);
-		
+
 		Category cat = { .cat_name = in_dir->d_name };
 		da_append(cats, cat);
 
@@ -212,7 +212,7 @@ int parseTrainData(Categories *cats) {
 			// 	printf("Skiping: %s, not a file!", in_file->d_name);
 			// 	continue;
 			// }
-			
+
 			char image_path[1024];
 			snprintf(image_path, 1024, "%s%s", full_path, in_file->d_name);
 

@@ -24,7 +24,7 @@ bool test_nnCost(void) {
 	STUC_MAT_AT(b1, 0, 0) = -7.064404;
 
 	float_t cost = stuc_nnCost(nn, tInput, tOutput);
-	float_t eps  = 1e-6; 
+	float_t eps  = 1e-6;
 	float_t expectedCost = 0.423917;
 
 	stuc_matFree(a[0]);
@@ -40,6 +40,6 @@ int main(void) {
 	bool pass = test_nnCost();
 
 	printf("nnCost Test: %s\n", pass ? PASS : FAIL);
-	
+
 	return 0;
 }

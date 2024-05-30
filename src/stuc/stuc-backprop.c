@@ -17,7 +17,7 @@ float_t stuc__activationDerivative(Stuc_nn nn, size_t layer, size_t neuron) {
 		case STUC_ACTIVATE_SOFTMAX:	return stuc__derivSoftmax(nn, layer, neuron);
 		default: STUC_ASSERT(0 && "The activation function is not supported!");
 	}
-	
+
 	return 0.0f;
 }
 
@@ -66,7 +66,7 @@ void stuc__calculateBackpropForLayerActivation(Stuc_nn nn, Stuc_nn gd_map, size_
 	}
 }
 
-// Matematički izvor: 
+// Matematički izvor:
 // https://github.com/tsoding/ml-notes/blob/master/papers/grad.pdf
 void stuc__nnBackprop(Stuc_nn nn, Stuc_nn gd_map, Stuc_mat tInput, Stuc_mat tOutput, float_t boost) {
 	STUC_ASSERT(tInput.rows == tOutput.rows);

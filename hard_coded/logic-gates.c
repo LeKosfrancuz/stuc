@@ -21,7 +21,7 @@ float sigmoidf(float x) {
 float cost(float w1, float w2, float b) {
 	float modelCost = 0.f;
 	const int sampleCount = sizeof(tData)/sizeof(tData[0][0])/3;
-	
+
 	for (int i = 0; i < sampleCount; i++) {
 		int x1 = tData[i][0];
 		int x2 = tData[i][1];
@@ -35,7 +35,7 @@ float cost(float w1, float w2, float b) {
 }
 
 int main() {
-	
+
 	// y = x * w
 	srand(time(0));
 	float w1 = randFloat() * 5;

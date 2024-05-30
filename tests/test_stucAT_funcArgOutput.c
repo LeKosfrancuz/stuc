@@ -16,7 +16,7 @@ bool test_stucAT_funcArgOutput(void) {
 	STUC_NN_OUTPUT(nn).el[0] = 4;
 
 	bool passed = function(NULL, STUC_AT_OUTPUT(nn, 0), NULL);
-	
+
 	stuc_nnFree(nn);
 	return passed;
 }
@@ -25,6 +25,6 @@ int main(void) {
 	bool pass = test_stucAT_funcArgOutput();
 
 	printf("stucAT_funcArgOutput Test: %s\n", pass ? PASS : FAIL);
-	
+
 	return 0;
 }

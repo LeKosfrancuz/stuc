@@ -14,7 +14,7 @@ uint8_t stuc_nnSaveToFile(Stuc_nn nn, const char *file_path) {
 		fprintf(stderr, "\x1b[1;31mError\x1b[0;37m opening file \"%s\": %s\n", file_path, strerror(errno));
 		return return_flags |= STUC_IOFLAG_UNABLE_TO_WRITE;
 	}
-	
+
 	if (!STUC_SOFT_ASSERT(strlen(STUC_FILE_PREFIX) == 8)) return_flags |= STUC_IOFLAG_TYPE_MISMATCH;
 	fwrite(STUC_FILE_PREFIX, strlen(STUC_FILE_PREFIX), 1, fp);
 
@@ -38,7 +38,7 @@ uint8_t stuc_nnSaveToFile(Stuc_nn nn, const char *file_path) {
 		fwrite(&cols, sizeof(cols), 1, fp);
 		fwrite(STUC_NN_AT(nn, i).b.el, sizeof(float_t), cols, fp);
 		fwrite(STUC_NN_AT(nn, i).w.el, sizeof(float_t), cols * rows, fp);
-	
+
 	}
 
 	fclose(fp);
@@ -65,7 +65,7 @@ uint8_t stuc_nnLoadFromFile(Stuc_nn *nn, const char *file_path) {
 		fprintf(stderr, "\x1b[1;31mError\x1b[0;37m opening file \"%s\": %s\n", file_path, strerror(errno));
 		return return_flags |= STUC_IOFLAG_UNABLE_TO_READ;
 	}
-	
+
 	if (!STUC_SOFT_ASSERT(strlen(STUC_FILE_PREFIX) == 8)) {
 		return return_flags |= STUC_IOFLAG_TYPE_MISMATCH;
 	}
@@ -110,7 +110,7 @@ uint8_t stuc_nnLoadFromFile(Stuc_nn *nn, const char *file_path) {
 
 		s_fread(STUC_NN_AT(*nn, i).b.el, sizeof(float_t), cols , fp);
 		s_fread(STUC_NN_AT(*nn, i).w.el, sizeof(float_t), cols * rows, fp);
-	
+
 	}
 
 	fclose(fp);

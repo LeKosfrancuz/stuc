@@ -28,7 +28,7 @@ typedef struct {
 ```
 
 ```c
-/* Zbroji matrice (a) + (b) te rezultat spremi u [a] 
+/* Zbroji matrice (a) + (b) te rezultat spremi u [a]
  *
  * (a) i (b) moraju biti istih dimenzija
  */
@@ -92,7 +92,7 @@ void stuc_matPrint(Stuc_mat a, char *name, int indent);
 Stuc_mat stuc_matRowView(Stuc_mat a, size_t row);
 
 /* Alocira mjesto za spremanje elemenata matrice
- * 
+ *
  * (rows) - broj redaka nove matrice
  * (cols) - broj stupaca nove matrice
  *
@@ -102,7 +102,7 @@ Stuc_mat stuc_matRowView(Stuc_mat a, size_t row);
 Stuc_mat stuc_matAlloc(size_t rows, size_t cols);
 
 /* Dealocira mjesto za spremanje elemenata matrice (a)
- * 
+ *
  * Napomena: Neće alocirati mjesto koje zauzima struktura matrice
  *	     to je na programeru. Dealocira samo elemente.
  */
@@ -144,12 +144,12 @@ float_t stuc_nnCost(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput);
 
 Stuc_nn stuc_nnBackprop(Stuc_nn nn, Stuc_mat tInput, Stuc_mat tOutput, float_t boost);
 
-void    stuc_nnBackpropNoAlloc(Stuc_nn nn, Stuc_nn gdMap, 
+void    stuc_nnBackpropNoAlloc(Stuc_nn nn, Stuc_nn gdMap,
                                Stuc_mat tInput, Stuc_mat tOutput, float_t boost);
 
 Stuc_nn stuc_nnFiniteDiff(Stuc_nn nn, float_t eps, Stuc_mat tInput, Stuc_mat tOutput);
 
-void    stuc_nnFiniteDiffNoAlloc(Stuc_nn nn, Stuc_nn fd, float_t eps, 
+void    stuc_nnFiniteDiffNoAlloc(Stuc_nn nn, Stuc_nn fd, float_t eps,
 				 Stuc_mat tInput, Stuc_mat tOutput);
 
 void    stuc_nnApplyDiff(Stuc_nn nn, Stuc_nn fd, float_t learningRate);
@@ -157,10 +157,10 @@ void    stuc_nnApplyDiff(Stuc_nn nn, Stuc_nn fd, float_t learningRate);
 Stuc_nn stuc_nnAlloc(Stuc_activationFunction *aktivacije,
 		     size_t *arhitektura, size_t arhCount);
 
-void    stuc_setActivation(Stuc_activationFunction *aktivacije, size_t aktCount, 
+void    stuc_setActivation(Stuc_activationFunction *aktivacije, size_t aktCount,
                            Stuc_activationFunction aktivacija);
 
-void    stuc_nnFree(Stuc_nn nn); 
+void    stuc_nnFree(Stuc_nn nn);
 ```
 
 

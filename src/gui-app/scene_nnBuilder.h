@@ -51,7 +51,7 @@ typedef struct {
 	float learnRateValue;                 // SliderBar: 	learnRate
 	size_t activationLookup[5];
 	bool batchSizeEditMode;		      // Spinner:       batch_size
-	
+
 	Gui_nnLayers layers;
 
 	const char *controlPanelText;                // GROUPBOX:    controlPanel
@@ -61,7 +61,7 @@ typedef struct {
 	const char *layerLabelText;                  // LABEL:       layerLabel
 	const char *activationLabelText;             // LABEL:       activationLabel
 	const char *numberOfNeuronsText;             // SPINNER:     numberOfNeurons
-	const char *trainingToggleText;              // TOGGLE:      trainingToggleText             
+	const char *trainingToggleText;              // TOGGLE:      trainingToggleText
 	const char *startTrainToggleText;            // TOGGLE:      trainingToggleText
 	const char *stopTrainToggleText;             // TOGGLE:      trainingToggleText
 	const char *batchSizeText;                   // SPINNER:     tranining data size in batch

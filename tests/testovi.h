@@ -26,15 +26,15 @@ void test_runAll(void) {
 	printf("Derivitive Tests: \n");
 
 	printf("\t TANH tests:\n");
-	printf("\t\t  TANH =  2: %s\n", 
+	printf("\t\t  TANH =  2: %s\n",
 		test_activationDerivTANH_dva() ? PASS : FAIL);
-	printf("\t\t  TANH = -2: %s\n", 
+	printf("\t\t  TANH = -2: %s\n",
 		test_activationDerivTANH_minusDva() ? PASS : FAIL);
-	printf("\t\t  TANH =  4: %s\n", 
+	printf("\t\t  TANH =  4: %s\n",
 		test_activationDerivTANH_cetiri() ? PASS : FAIL);
 
 	printf("Hello, World!\n");
- 
+
 	return;
 }
 

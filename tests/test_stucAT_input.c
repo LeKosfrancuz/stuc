@@ -29,7 +29,7 @@ bool test_stucAT_input(void) {
 
 		}
 	}
-	
+
 	stuc_nnFree(nn);
 	return passed;
 }
@@ -38,6 +38,6 @@ int main(void) {
 	bool pass = test_stucAT_input();
 
 	printf("stucAT_input Test: %s\n", pass ? PASS : FAIL);
-	
+
 	return 0;
 }

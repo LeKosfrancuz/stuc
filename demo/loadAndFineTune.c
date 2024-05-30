@@ -54,11 +54,11 @@ int main(void) {
 		stuc_nnFree(gd_map);
 
 		if (i % (gen_count/10) == 0) {
-			printf("\rcost = %.32f                          \n", 
+			printf("\rcost = %.32f                          \n",
 				stuc_nnCost(nn, tInput, tOutput));
 		} else if (gen_count >= 10000 && i % (gen_count / 10000) == 1) {
 			printf("\rFine Tunning Neural Network Model: %.2f%s\r",
-				(i / (float_t)gen_count) * 100, "%"); 
+				(i / (float_t)gen_count) * 100, "%");
 		}
 	}
 
@@ -66,6 +66,6 @@ int main(void) {
 	verify(nn, '?');
 
 	stuc_nnFree(nn);
-	
+
 	return 0;
 }

@@ -82,7 +82,7 @@ int main(void) {
 		g_screenWidth  = (size_t) GetScreenWidth();
 
 		changeVisualStyle(&prevActiveVisualStyle, activeVisualStyle);
-		
+
 		switch (activeScene) {
 		case SC_NN_BUILDER: scene_nnBuilderUpdate(&scene_nnBuilder); break;
 		case SC_TDATA: scene_tDataUpdate(&scene_tData); break;
@@ -91,7 +91,7 @@ int main(void) {
 #endif // ENABLE_RECOG
 		default: log(ERROR, "Unknown scene %d\n", activeScene);
 		}
-		
+
 
 		BeginDrawing();
 			ClearBackground(SC_BACKGROUND);
@@ -115,11 +115,11 @@ int main(void) {
 				if (scene_nnBuilder.neuralNetworkPreview.training) { GuiDisable(); GuiLock(); }
 
 				GuiLabel((Rectangle)
-					{ 
-					  g_screenWidth - leftPad - layerPad - sceneChooserRec.width - txtM.x, 
-					  10, 
-					  (int)(g_screenWidth / 10), 
-					  24 
+					{
+					  g_screenWidth - leftPad - layerPad - sceneChooserRec.width - txtM.x,
+					  10,
+					  (int)(g_screenWidth / 10),
+					  24
 					}
 				, text);
 				GuiComboBox(sceneChooserRec, sceneChooserText, &activeScene);
@@ -137,7 +137,7 @@ int main(void) {
 			case SC_IMAGE_RECOGNISER: scene_imageRecogDraw(&scene_imageRecog); break;
 #endif // ENABLE_RECOG
 			default: log(ERROR, "Unknown scene %d\n", activeScene);
-			} 
+			}
 
 		EndDrawing();
 	}
@@ -157,7 +157,7 @@ void changeVisualStyle(int *prevVisualStyle, const int visualStyle) {
 
             GuiLoadStyleDefault();
             switch (visualStyle)
-            {	
+            {
                 case  0: break; // Default style
                 case  1: GuiLoadStyleJungle();	 break;
                 case  2: GuiLoadStyleLavanda();  break;

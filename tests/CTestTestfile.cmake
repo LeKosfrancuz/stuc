@@ -1,6 +1,6 @@
-# CMake Testfile for stuc.h 
+# CMake Testfile for stuc.h
 # Build dir: /stuc/tests/build/
-# 
+#
 # use $ ./run-tests.sh
 message("\nStarted testing...\n")
 
@@ -19,7 +19,7 @@ string(REPLACE " " ";" tests "${tests}")
 
 foreach(test IN LISTS tests)
 	add_test(test_${test} "./build/test_${test}")
-	
+
 	string(REGEX REPLACE "_[^$]*" "" label "${test}")
 
 	set_tests_properties(TEST test_${test}

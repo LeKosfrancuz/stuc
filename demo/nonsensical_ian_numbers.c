@@ -18,7 +18,7 @@ float_t tData[] = {
 int main(void) {
 
 	srand(time(0));
-	
+
 	size_t numberOfInputs  = 1;
 	size_t numberOfOutputs = 1;
 	size_t numberOfSamples = 4;
@@ -43,7 +43,7 @@ int main(void) {
 		stuc_nnApplyDiff(nn, gdMap, learningRate);
 
 		if (i % (gen_count/10) == 0) {
-			printf("\rcost = %.32f                          \n", 
+			printf("\rcost = %.32f                          \n",
 				stuc_nnCost(nn, tInput, tOutput));
 		} else if (i % (gen_count / 10000) == 1) {
 			printf("\rTraning Neural Network Model: %.2f%%\r",
@@ -68,7 +68,7 @@ int main(void) {
 	} while(!shouldExit);
 
 
-	// NN_PRINT(nn); 
+	// NN_PRINT(nn);
 	printf("cost = %f\n", stuc_nnCost(nn, tInput, tOutput));
 	stuc_nnFree(nn);
 	stuc_nnFree(gdMap);

@@ -33,7 +33,7 @@ typedef struct {
 	float_t *el;
 } Stuc_mat;
 
-/* Zbroji matrice (a) + (b) te rezultat spremi u [a] 
+/* Zbroji matrice (a) + (b) te rezultat spremi u [a]
  *
  * (a) i (b) moraju biti istih dimenzija
  */
@@ -97,7 +97,7 @@ void stuc_matPrint(Stuc_mat a, char *name, int indent);
 Stuc_mat stuc_matRowView(Stuc_mat a, size_t row);
 
 /* Alocira mjesto za spremanje elemenata matrice
- * 
+ *
  * (rows) - broj redaka nove matrice
  * (cols) - broj stupaca nove matrice
  *
@@ -107,7 +107,7 @@ Stuc_mat stuc_matRowView(Stuc_mat a, size_t row);
 Stuc_mat stuc_matAlloc(size_t rows, size_t cols);
 
 /* Dealocira mjesto za spremanje elemenata matrice (a). To je: (a).el
- * 
+ *
  * Napomena: Neće alocirati mjesto koje zauzima struktura matrice
  *	     to je na programeru. Dealocira samo elemente.
  */
@@ -186,7 +186,7 @@ void stuc_nnFiniteDiffNoAlloc(Stuc_nn nn, Stuc_nn fd, float_t eps, Stuc_mat tInp
 void stuc_nnApplyDiff(Stuc_nn nn, Stuc_nn diff, float_t learning_rate);
 Stuc_nn stuc_nnAlloc(Stuc_activationFunction *aktivacije, size_t *arhitektura, size_t arh_count);
 void stuc_setActivation(Stuc_activationFunction *aktivacije, size_t akt_count, Stuc_activationFunction aktivacija);
-void stuc_nnFree(Stuc_nn nn); 
+void stuc_nnFree(Stuc_nn nn);
 uint8_t stuc_nnSaveToFile(Stuc_nn nn, const char *file_path);
 uint8_t stuc_nnLoadFromFile(Stuc_nn *nn, const char *file_path);
 void stuc_printIOFlags(uint8_t flags);
@@ -202,7 +202,7 @@ STUC_IOFLAG_COUNT = 5,
 
 #ifndef STUC_MALLOC
 	#define STUC_MALLOC malloc_set0
-	#define malloc_set0(n) calloc((n), 1); 
+	#define malloc_set0(n) calloc((n), 1);
 	#include <stdlib.h>
 #endif // STUC_MALLOC
 
@@ -220,8 +220,8 @@ STUC_IOFLAG_COUNT = 5,
 #endif // STUC_ASSERT
 
 #ifndef NO_STDIO
-	#include <stdio.h>	
-#else 
+	#include <stdio.h>
+#else
 	#undef STUC_SOFT_ASSERT
 	#define STUC_SOFT_ASSERT STUC_ASSERT
 	#undef MAT_PRINT
